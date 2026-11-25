@@ -1,0 +1,20 @@
+{
+  "su27":     {"name": "Su27", "author": "manilov.ap", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-1e4d5f1551a94e75b407bb5119fca8c2"},
+  "f16":      {"name": "General Dynamics F-16D Block 60", "author": "MirzaArrafiERV_45", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-ea8edb08d79e4eafa9c794c581f88cf3"},
+  "m2000":    {"name": "Mirage2000", "author": "manilov.ap", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-3efefc5b6230418eb5d39a4afcb95657"},
+  "gripen":   {"name": "JAS39 Gripen", "author": "helijah", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-a2b70c2f92af45d18d95f02b60621dbf"},
+  "su24":     {"name": "Su24", "author": "manilov.ap", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-3439ae4000df438894a44127ebda538c"},
+  "su25":     {"name": "Su-25", "author": "tnikita", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-88b71eb848cf4418a95dff497c07cefc"},
+  "l39":      {"name": "L39", "author": "manilov.ap", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-4b37b2b4ae9e40ac9a6fb876e2142672"},
+  "mi24":     {"name": "Mi-24 Hind", "author": "duanesmind", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-004d68143e1a4df88e136dbc0a05f181"},
+  "mi8":      {"name": "helicopter mi-8", "author": "tnikita", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-aaa58674609e40feafe816909de65ff9"},
+  "tb2":      {"name": "Baykar Bayraktar TB2", "author": "TheDevilsEye", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-8e5b6972f7d049f19688096e03949487"},
+  "shahed":   {"name": "Iranian Shahed-136 military drone", "author": "Chenzoss", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-af8ac3d45ade494fb280c99922513ae2"},
+  "orlan":    {"name": "Orlan-10", "author": "flightclubua", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-e2efb223c1814b7291818a9a7b4e80c5"},
+  "kh101":    {"name": "Kh-101 Cruise Missile - Textured", "author": "xFORTUNAx", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-6e67414d02f348d28fbe65fa0b6d2de2"},
+  "kalibr":   {"name": "Sizzler SS-N-27 Kalibr 3M-54", "author": "mmickel", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-63fc0ac8032c42e3bfd3e548192d5a9c"},
+  "iskander": {"name": "ISKANDER (9K720)", "author": "dofash_76", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-244b511ee2ca4f3794d118b872ee229c"},
+  "patriot":  {"name": "MIM-104 Patriot Air Defense System", "author": "MirzaArrafiERV_45", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-95e1e402426f4ddcb543af7a0455cf05"},
+  "buk":      {"name": "BUK Missile System", "author": "azlan", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-7663f9fca2ce485da8c0fafcf2d40d10"},
+  "nasams":   {"name": "Nasams 1 Surface-to-Air Missile System", "author": "MirzaArrafiERV_45", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-5fb34fab137c430988fd5642a3b87db3"}
+}

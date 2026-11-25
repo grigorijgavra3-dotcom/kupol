@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Купол — оборона неба</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<style>
+:root{--bg:#0b1114;--panel:rgba(10,18,22,.93);--line:#24414a;--txt:#cfe9ee;--dim:#7fa3ab;--acc:#4fd1e0;--ok:#5ee08a;--warn:#ffb347;--bad:#ff5a5a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.5 system-ui,Segoe UI,sans-serif;overflow:hidden}
+#map{position:absolute;inset:0}
+.leaflet-tile-pane{filter:saturate(.75) brightness(.8) contrast(1.05)}
+.leaflet-container{background:#1a2226;cursor:default}
+#fx{position:absolute;inset:0;pointer-events:none;z-index:500}
+#gl{position:absolute;inset:0;pointer-events:none;z-index:450}
+button{font:inherit;color:var(--txt);background:#14262c;border:1px solid var(--line);border-radius:6px;padding:8px 14px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--acc);background:#18323a}
+button:disabled{opacity:.4;cursor:default}
+button.on{border-color:var(--acc);color:var(--acc)}
+.hidden{display:none!important}
+.x{float:right;padding:2px 10px;font-size:16px;line-height:1.2}
+#menu{position:absolute;inset:0;z-index:1000;display:flex;align-items:center;pointer-events:none}
+#menu .screen{pointer-events:auto;margin-left:6vw;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:24px 28px;width:min(440px,90vw);max-height:90vh;overflow:auto;box-shadow:0 10px 40px #000a}
+#menu h1{margin:0 0 4px;font-size:34px;letter-spacing:.12em;color:var(--acc)}
+#menu h2{margin:0 0 16px;font-size:20px}
+#menu .sub{color:var(--dim);margin-bottom:22px}
+.vlist{display:flex;flex-direction:column;gap:10px}
+.vlist button{text-align:left;padding:12px 16px;font-size:16px}
+.op small{display:block;color:var(--dim);font-size:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
+.row input[type=range]{width:180px}
+#codex.screen{width:min(1150px,94vw);margin:0 auto}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.cx{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;gap:10px;background:#0e1a1e}
+.cx canvas{flex:none;width:110px;height:110px;background:radial-gradient(#33402f,#1d2620);border-radius:6px}
+.cx>div{flex:1;min-width:0}
+.cx b{display:block;margin-bottom:2px}
+.cx table{font-size:12px;border-collapse:collapse;width:100%}
+.cx td{padding:1px 0;vertical-align:top}.cx td:first-child{color:var(--dim);padding-right:6px}
+.note{color:var(--dim);font-size:12px;margin:8px 0 12px}
+#hud{position:absolute;inset:0;z-index:900;pointer-events:none}
+#hud>*{pointer-events:auto}
+#top{position:absolute;left:10px;top:10px;right:310px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+#top .k{color:var(--dim)}
+.hp{display:inline-block;width:90px;height:8px;background:#311;border-radius:4px;vertical-align:middle;overflow:hidden}
+.hp i{display:block;height:100%;background:var(--ok)}
+#side{position:absolute;right:10px;top:10px;bottom:10px;width:290px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column}
+#side .tabs button{flex:1;padding:6px}
+#side .tabs #sideMin{flex:0 0 auto;padding:6px 10px}
+#side.min{bottom:auto;width:auto}#side.min #cards,#side.min #hint{display:none}#side.min .tabs{margin:0}
+#sel h3{cursor:move;user-select:none}
+#cards{overflow:auto;flex:1;display:flex;flex-direction:column;gap:6px}
+.card{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;cursor:pointer;background:#0e1a1e}
+.card:hover{border-color:var(--acc)}.card.sel{border-color:var(--warn);background:#2a2412}
+.card.off{opacity:.4;cursor:default}
+.card canvas{flex:none;background:radial-gradient(#33402f,#1d2620);border-radius:4px}.card div{flex:1;min-width:0}.card b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card small{color:var(--dim);font-size:11px}.card .badge{font-size:12px;color:var(--acc);white-space:nowrap;text-align:right}
+#hint{color:var(--dim);font-size:12px;margin-top:8px;min-height:34px}
+#bottom{position:absolute;left:10px;bottom:10px;display:flex;gap:6px;align-items:center}
+#bottom button{padding:6px 10px}
+#startWave{background:#3a2a0c;border-color:var(--warn);color:var(--warn);font-weight:600}
+#log{position:absolute;left:10px;bottom:56px;width:380px;font-size:12px;display:flex;flex-direction:column;gap:2px;pointer-events:none}
+#log div{background:var(--panel);border-left:3px solid var(--acc);padding:3px 8px;border-radius:3px}
+#log .bad{border-color:var(--bad)}#log .ok{border-color:var(--ok)}#log .warn{border-color:var(--warn)}
+#sel{position:absolute;right:310px;bottom:10px;width:360px;max-height:calc(100vh - 90px);overflow:auto;background:var(--panel);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:13px}
+#sel.enemy{border-color:var(--bad)}
+#sel h3{margin:0 0 4px;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#sel .k{color:var(--dim)}
+#sel .btns{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+#sel button{padding:3px 8px;font-size:12px}
+#sel .chip{border-radius:12px}
+#sel .chip.on{background:#16333a}
+#sel .chip:not(.on){color:var(--dim);text-decoration:line-through}
+#sel table{font-size:12px;border-collapse:collapse;width:100%}#sel td{padding:1px 0}#sel td:first-child{color:var(--dim);padding-right:8px}
+.mrow{display:flex;align-items:center;gap:6px;border-top:1px solid var(--line);padding:4px 0}
+.mrow>div{flex:1;min-width:0}.mrow small{color:var(--dim);display:block;font-size:11px}
+.mrow.pick{background:#1b2a1e}
+.bar{height:5px;background:#222;border-radius:3px;overflow:hidden;margin:2px 0 4px}.bar i{display:block;height:100%;background:var(--acc)}
+#modal{position:absolute;inset:0;z-index:1100;background:#000a;display:flex;align-items:center;justify-content:center}
+#modal .screen{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:24px 28px;width:min(420px,90vw)}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+
+<div id="menu">
+  <div class="screen" id="main">
+    <h1>КУПОЛ</h1>
+    <div class="sub">Тактичний симулятор протиповітряної оборони</div>
+    <div class="vlist">
+      <button data-go="ops">▶ Почати</button>
+      <button data-go="codex">Довідник техніки</button>
+      <button data-go="settings">Налаштування</button>
+    </div>
+  </div>
+  <div class="screen hidden" id="ops">
+    <h2>Операції <button class="x" data-go="main" title="Закрити">✕</button></h2>
+    <div class="note" style="margin:0 0 6px">Складність:</div>
+    <div class="tabs" id="diffBtns"></div>
+    <div class="note" id="diffNote" style="margin-top:0"></div>
+    <div class="vlist">
+      <button class="op" id="opKyiv">1. Оборона Києва<small>Київська область · 8 хвиль · дрони, крилаті й балістичні ракети</small></button>
+      <button class="op" disabled>2. Оборона Харкова<small>Скоро</small></button>
+      <button class="op" disabled>3. Оборона Одеси<small>Скоро</small></button>
+      <button class="op" disabled>4. Оборона Дніпра<small>Скоро</small></button>
+      <button class="op" disabled>5. Оборона Львова<small>Скоро</small></button>
+    </div>
+  </div>
+  <div class="screen hidden" id="settings">
+    <h2>Налаштування <button class="x" id="setX" title="Закрити">✕</button></h2>
+    <div class="row"><span>Загальна гучність</span><input type="range" min="0" max="1" step="0.05" data-set="master"></div>
+    <div class="row"><span>Ефекти</span><input type="range" min="0" max="1" step="0.05" data-set="sfx"></div>
+    <div class="row"><span>Музика</span><input type="range" min="0" max="1" step="0.05" data-set="music"></div>
+    <div class="row"><span>Сирена повітряної тривоги</span><input type="checkbox" data-set="siren"></div>
+    <div class="row"><span>Показувати зони ураження</span><input type="checkbox" data-set="ranges"></div>
+    <div class="row"><span>Підписи цілей</span><input type="checkbox" data-set="labels"></div>
+    <div class="note" style="margin:14px 0 0">3D чи 2D (на слабкому ПК вимкніть 3D):</div>
+    <div class="row"><span>Літаки — 3D</span><input type="checkbox" data-set="v3_air"></div>
+    <div class="row"><span>Гелікоптери — 3D</span><input type="checkbox" data-set="v3_heli"></div>
+    <div class="row"><span>Наші БпЛА — 3D</span><input type="checkbox" data-set="v3_uav"></div>
+    <div class="row"><span>Дрони й ракети противника — 3D</span><input type="checkbox" data-set="v3_enemy"></div>
+    <div class="row"><span>Пускові ППО — 3D</span><input type="checkbox" data-set="v3_sam"></div>
+    <div class="row"><span>Показувати типові маршрути дронів</span><input type="checkbox" data-set="routes"></div>
+    <div class="row"><span>Тіні під технікою</span><input type="checkbox" data-set="shadows"></div>
+    <div class="row"><span>Тряска екрана</span><input type="checkbox" data-set="shake"></div>
+  </div>
+  <div class="screen hidden" id="codex">
+    <h2>Довідник техніки <button class="x" data-go="main" title="Закрити">✕</button></h2>
+    <div class="tabs" id="cxTabs"></div>
+    <div class="note">3D-моделі зібрані за реальними розмірами. Власні 3D-моделі (.glb) кладіть у папку <b>models/</b> як <b>id.glb</b> і перелічуйте в <b>models/index.json</b>, напр. ["mig29"] або {"mig29":{"rot":90}} — масштаб підбереться за реальною довжиною. Свої PNG (вид зверху, ніс угору, прозорий фон) можна покласти в папку <b>sprites/</b> з назвою <b>id.png</b> (id вказано в картці) і перелічити id у <b>sprites/index.json</b>, напр. ["mig29","shahed"] — гра покаже їх замість малюнка. «~» — публічні оцінки, на сторінках Вікіпедії їх не було. «★» — немає в переліку сторінки ППО.</div>
+    <div class="grid" id="cxGrid"></div>
+  </div>
+  <div class="screen hidden" id="pause">
+    <h2>Пауза <button class="x" id="pauseX" title="Продовжити">✕</button></h2>
+    <div class="vlist">
+      <button id="resume">Продовжити</button>
+      <button id="pauseCodex">Довідник техніки</button>
+      <button id="pauseSettings">Налаштування</button>
+      <button id="quit">Вийти в головне меню</button>
+    </div>
+  </div>
+</div>
+
+<div id="hud" class="hidden">
+  <div id="top"></div>
+  <div id="side">
+    <div class="tabs"><button data-tab="sam" class="on">ППО</button><button data-tab="air">Авіація</button><button data-tab="uav">БпЛА</button><button id="sideMin" title="Згорнути / розгорнути">✕</button></div>
+    <div id="cards"></div>
+    <div id="hint"></div>
+  </div>
+  <div id="log"></div>
+  <div id="sel" class="hidden"></div>
+  <div id="bottom">
+    <button id="menuBtn" title="Меню (Esc)">☰</button>
+    <button data-speed="0" title="Пауза (пробіл)">⏸</button>
+    <button data-speed="1" title="Реальний час">1×</button><button data-speed="10">10×</button><button data-speed="30">30×</button><button data-speed="60">60×</button>
+    <button id="startWave">▶ Почати хвилю</button>
+  </div>
+</div>
+
+<div id="modal" class="hidden"><div class="screen"><h2 id="mTitle"></h2><div id="mText" class="note" style="font-size:14px"></div><div class="vlist"><button id="mAgain">Ще раз</button><button id="mMenu">Головне меню</button></div></div></div>
+
+<script src="sim.js"></script>
+<script>
+'use strict';
+// ================= 2D-МОДЕЛІ (вид зверху, метри; ніс у y=0) =================
+// out — права половина контуру; paint — основний колір; camo — плями камуфляжу; det — деталі.
+const OLIVE = '#5f6a45';
+const MODELS = {
+ mig29:{L:17.32,S:11.36,paint:'#8b98a6',camo:['#6c7b8b','#a9b4bf'],out:[[0,0],[.45,2.5],[.7,4.5],[1.6,7],[2,8],[5.68,11.8],[5.68,12.9],[2.4,12.6],[2.4,13.6],[3.9,16.3],[3.9,17],[1.6,16.8],[1.1,17.32],[0,17]],
+  det:[['canopy',4.3,.45,1.2],['fin',1.7,13,16.6],['eng',1.05,8.5,17.2,.55],['nozzle',1.05,17.2,.42]]},
+ su27:{L:21.9,S:14.7,paint:'#8796a5',camo:['#62758a','#aab7c3'],out:[[0,0],[.5,3],[.8,6],[2,9.5],[2.5,10.5],[7.35,15],[7.35,16],[2.8,15.5],[2.8,17.2],[5,20.6],[5,21.2],[1.6,21],[1,21.9],[0,21.5]],
+  det:[['canopy',5.6,.5,1.3],['fin',2.2,16.3,20.4],['eng',1.15,10.5,21.4,.6],['nozzle',1.15,21.4,.5]]},
+ f16:{L:15.06,S:9.96,paint:'#9aa3ab',out:[[0,0],[.4,2],[.55,3.5],[.7,4.8],[1.5,6.8],[1.6,7.2],[4.98,10.4],[4.98,11.2],[1.7,11.4],[1.7,12.1],[2.9,14.3],[2.9,14.8],[.6,14.6],[.55,15.06],[0,15.06]],
+  det:[['canopy',3.9,.42,1.3],['fin',0,11,14.6],['line',4.98,9.4,4.98,12.2],['nozzle',0,15,.5]]},
+ m2000:{L:14.36,S:9.13,paint:'#8f9aa6',out:[[0,0],[.4,2.5],[.6,4.5],[.8,5.5],[1,6],[4.56,13.3],[4.56,13.6],[.8,13.6],[.6,14.36],[0,14.36]],
+  det:[['canopy',3.9,.4,1.1],['fin',0,9.5,14],['line',.8,5.5,1,8.5],['nozzle',0,14.3,.5]]},
+ gripen:{L:14.1,S:8.4,paint:'#8e979f',out:[[0,0],[.35,2],[.55,3.5],[.8,4.6],[2.4,6.2],[2.4,6.6],[.85,6.4],[.9,7.2],[4.2,12.2],[4.2,12.8],[.8,12.8],[.5,14.1],[0,14.1]],
+  det:[['canopy',3.3,.35,1],['fin',0,10,14],['nozzle',0,14,.45]]},
+ su24:{L:22.67,S:17.64,paint:'#a39b78',camo:['#6f7a4f','#7a5f3e','#c4b98e'],out:[[0,0],[.6,3],[1,5.5],[1.6,7.5],[2.6,9.5],[8.82,10.8],[8.82,11.8],[2.7,12.2],[2.5,16.5],[5,20],[5,20.8],[1.6,20.5],[1.2,22.67],[0,22.4]],
+  det:[['canopy',4.6,.85,1],['fin',0,16,22],['eng',1.05,9,22.3,.6],['nozzle',1.05,22.3,.5]]},
+ su25:{L:15.36,S:14.36,paint:'#8a8a63',camo:['#5d6b3c','#7b5a3a','#a9a37d'],out:[[0,0],[.35,1.5],[.6,3.5],[.75,5.5],[1.4,6],[1.5,6.8],[7.18,7.8],[7.18,8.8],[1.5,9.1],[1.3,10.8],[.6,11.5],[.6,12.8],[2.5,13.8],[2.5,14.6],[.5,14.6],[.4,15.36],[0,15.36]],
+  det:[['canopy',3.2,.4,.9],['eng',1.08,5.7,10.9,.48],['nozzle',1.08,10.9,.35],['fin',0,12.5,15.2]]},
+ l39:{L:12.13,S:9.46,paint:'#9ba7ad',camo:['#7f8c74','#6b7a62'],out:[[0,0],[.35,1.5],[.55,3],[.6,5],[.7,5.6],[4.5,6],[4.5,7.3],[.75,7.6],[.55,10],[2.2,10.6],[2.2,11.6],[.4,11.6],[.3,12.13],[0,12.13]],
+  det:[['canopy',3.2,.35,1.5],['tip',4.6,5.3,7.8,.28],['fin',0,9.8,12]]},
+ mi24:{L:17.5,S:17.3,paint:'#6b7550',camo:['#8a7a52','#4d5638'],out:[[0,0],[.5,.8],[.85,2.2],[1,5],[.9,9],[.45,11],[.25,17],[0,17.5]],
+  det:[['poly',[[.9,6],[3.2,6.5],[3.2,7.5],[.9,7.8]]],['canopy',1.2,.35,.5],['canopy',2.8,.45,.6],['rotor',6.5,8.65,5],['trotor',16.8,1.95]]},
+ mi8:{L:18.3,S:21.3,paint:'#6f7b55',camo:['#8b7b53','#55603f'],out:[[0,0],[.7,.8],[1.15,2.5],[1.2,10.5],[.9,12.5],[.35,13.5],[.25,17.8],[0,18.3]],
+  det:[['eng',1.45,4,9,.3],['canopy',1.1,.6,.6],['rotor',6,10.65,5],['trotor',17.8,1.75]]},
+ tb2:{L:6.5,S:12,paint:'#c9ccd0',out:[[0,0],[.3,.6],[.35,2.4],[6,2.6],[6,3.3],[.35,3.3],[.2,5],[1.4,6],[1.4,6.4],[.15,6.1],[0,6.5]],det:[['prop',6.5,.55]]},
+ leleka:{L:1.25,S:2,paint:'#7f8a6a',out:[[0,0],[.12,.15],[.2,.35],[1,.8],[1,1],[.2,.95],[.12,1.25],[0,1.25]],det:[['fin',1,.75,1.02],['prop',1.25,.16]]},
+ furia:{L:1.2,S:2.1,paint:'#8a9178',out:[[0,0],[.07,.1],[.08,.3],[1.05,.33],[1.05,.5],[.08,.52],[.05,.95],[.3,1],[.3,1.15],[0,1.2]],det:[['prop',1.2,.15]]},
+ spectator:{L:1.6,S:3,paint:'#5f6b55',out:[[0,0],[.09,.15],[.1,.45],[1.5,.5],[1.5,.72],[.1,.75],[.06,1.35],[.4,1.42],[.4,1.58],[0,1.6]],det:[['prop',0,.18]]},
+ besomar:{L:.9,S:1.2,paint:'#3d4247',out:[[0,0],[.06,.1],[.07,.3],[.6,.33],[.6,.45],[.07,.48],[.04,.78],[.22,.84],[.22,.9],[0,.9]],det:[['prop',.9,.1]]},
+ winfly:{L:.6,S:.6,paint:'#2b2e33',quad:true},
+ darts:{L:1.2,S:1.5,paint:'#555b4c',out:[[0,0],[.08,.15],[.1,.4],[.75,.55],[.75,.7],[.1,.72],[.05,1.05],[.25,1.12],[.25,1.2],[0,1.2]],det:[['prop',0,.15]]},
+ lutyi:{L:4.2,S:6.7,paint:'#9fa6a8',out:[[0,0],[.35,.4],[.4,1.1],[3.35,1.2],[3.35,1.9],[.4,2],[.15,3.6],[1.1,3.8],[1.1,4.2],[0,4.2]],det:[['prop',4.2,.6],['fin',0,3.5,4.2]]},
+ bober:{L:2.5,S:2.5,paint:'#7a7f6a',out:[[0,0],[.1,.2],[.55,.45],[.55,.6],[.12,.6],[.15,1.4],[1.25,2],[1.25,2.3],[.15,2.25],[0,2.5]],det:[['fin',1.25,1.9,2.35],['prop',2.5,.3]]},
+ fp1:{L:4,S:6,paint:'#a6a9a3',out:[[0,0],[.3,.4],[.35,1.1],[3,1.2],[3,1.8],[.35,1.9],[.15,3.4],[1,3.6],[1,4],[0,4]],det:[['prop',0,.5]]},
+ shahed:{L:3.5,S:2.5,paint:'#2c2e31',out:[[0,0],[.2,.3],[.25,.9],[1.25,2.9],[1.25,3.2],[.25,3.2],[.15,3.5],[0,3.5]],det:[['fin',1.25,2.55,3.3],['prop',3.5,.38]]},
+ geran3:{L:3.2,S:2.5,paint:'#303338',out:[[0,0],[.2,.3],[.25,.9],[1.25,2.7],[1.25,3],[.25,3],[.25,3.2],[0,3.2]],det:[['fin',1.25,2.4,3.1],['circ',0,2.55,.22],['nozzle',0,3.15,.2]]},
+ gerbera:{L:2.2,S:2.4,paint:'#bdb4a0',out:[[0,0],[.18,.2],[.2,.6],[1.2,1.8],[1.2,2.1],[.2,2.1],[.15,2.2],[0,2.2]],det:[['fin',1.2,1.6,2.15],['prop',2.2,.3]]},
+ parodiya:{L:2.5,S:2,paint:'#d2cbb6',out:[[0,0],[.18,.25],[.2,.7],[1,2.1],[1,2.4],[.2,2.4],[0,2.5]],det:[['prop',2.5,.28]]},
+ orlan:{L:1.8,S:3.1,paint:'#a3a9ac',out:[[0,0],[.08,.12],[.1,.45],[1.55,.5],[1.55,.72],[.1,.75],[.06,1.45],[.45,1.55],[.45,1.75],[0,1.8]],det:[['prop',0,.2]]},
+ italmas:{L:2.5,S:3,paint:'#8a8f88',out:[[0,0],[.12,.2],[.15,.6],[1.5,.75],[1.5,1],[.15,1.05],[.08,2],[.55,2.2],[.55,2.4],[0,2.5]],det:[['prop',2.5,.3],['fin',0,2,2.45]]},
+ zala:{L:.9,S:1.8,paint:'#6e7a5a',out:[[0,0],[.1,.08],[.9,.55],[.9,.7],[.15,.6],[.1,.9],[0,.9]],det:[['fin',.9,.5,.72]]},
+ supercam:{L:1.4,S:3.2,paint:'#8b9296',out:[[0,0],[.1,.15],[.12,.45],[1.6,.6],[1.6,.85],[.12,.85],[.06,1.2],[.35,1.3],[.35,1.4],[0,1.4]],det:[['prop',0,.18]]},
+ forpost:{L:5.85,S:8.55,paint:'#b5b9b5',out:[[0,0],[.35,.4],[.4,1.6],[4.27,1.8],[4.27,2.4],[1.35,2.5],[1.35,5.2],[1.7,5.3],[1.7,5.85],[0,5.85],[0,4.9],[.3,4.9],[.3,3.3],[0,3.4]],det:[['line',1.2,2.5,1.2,5.3],['prop',3.4,.7]]},
+ orion:{L:8.1,S:16.3,paint:'#b0b6ba',out:[[0,0],[.45,.6],[.5,3],[8.15,3.2],[8.15,3.9],[.5,4],[.25,7],[2,7.8],[2,8.1],[0,8.1]],det:[['prop',8.1,.8]]},
+ kh101:{L:7.45,S:3,paint:'#3a3f44',out:[[0,0],[.3,.5],[.37,2.6],[1.5,3.2],[1.5,3.6],[.37,3.5],[.37,6.4],[.95,7.1],[.95,7.45],[0,7.4]],det:[['nozzle',0,7.4,.25]]},
+ kalibr:{L:6.2,S:3.1,paint:'#5c6266',out:[[0,0],[.15,.4],[.27,1.2],[.27,2.6],[1.55,2.75],[1.55,3.05],[.27,3.2],[.27,5.6],[.7,6],[.7,6.2],[0,6.2]],det:[['nozzle',0,6.15,.2]]},
+ iskander:{L:7.3,S:1.4,paint:'#5b6b4f',out:[[0,0],[.25,.7],[.46,1.8],[.46,6.3],[.7,6.8],[.7,7.3],[0,7.3]],det:[['nozzle',0,7.3,.35]]},
+ kinzhal:{L:7.2,S:1.2,paint:'#c4c7c9',out:[[0,0],[.2,.8],[.5,2],[.5,6.6],[.6,7],[.6,7.2],[0,7.2]],det:[['nozzle',0,7.2,.35]]},
+ patriot:{L:10.4,S:2.5,paint:'#b39f72',out:[[0,0],[1.1,0],[1.25,.3],[1.25,10.4],[0,10.4]],det:[['cab',0,2.3],['tubes',4,1.1,3,10.2]]},
+ s300:{L:12,S:3,paint:OLIVE,camo:['#4b5436','#7a7650'],out:[[0,0],[1.3,0],[1.5,.4],[1.5,12],[0,12]],det:[['cab',0,2.8],['tubes',4,1.3,3.2,11.8]]},
+ s200:{L:10.8,S:4,paint:OLIVE,out:[[0,1],[2,1],[2,6.5],[0,6.5]],det:[['tubes',1,.43,0,10.8],['poly',[[.43,7.4],[1.5,9],[1.5,9.6],[.43,9.6]]]]},
+ iris:{L:10,S:2.55,paint:'#626a52',out:[[0,0],[1.1,0],[1.27,.3],[1.27,10],[0,10]],det:[['cab',0,2.4],['tubes',8,1.15,3,9.6]]},
+ buk:{L:9.3,S:3.25,paint:'#5d6a42',camo:['#46502f','#7c7752'],out:[[0,0],[1.4,0],[1.62,.6],[1.62,9.3],[0,9.3]],det:[['tracks',1.37,.3,9.1,.5],['circ',0,5,1.2],['tubes',4,.9,2.5,8.4]]},
+ nasams:{L:7.5,S:2.5,paint:'#5b6448',out:[[0,1],[1.25,1],[1.25,7.5],[0,7.5]],det:[['line',0,0,0,1],['tubes',6,1.1,1.6,7.2]]},
+ hawk:{L:5.5,S:3,paint:'#5d6648',out:[[0,1],[1.5,1],[1.5,4.5],[0,4.5]],det:[['tubes',3,1.2,0,5.5]]},
+ s125:{L:6.2,S:5,paint:'#5c6845',out:[[0,1.5],[2.5,1.5],[2.5,4.5],[0,4.5]],det:[['tubes',4,1.6,0,6.2]]},
+ crotale:{L:6.6,S:2.6,paint:'#6f7356',out:[[0,0],[1.1,0],[1.3,.5],[1.3,6.6],[0,6.6]],det:[['circ',0,3.8,1.1],['tubes',2,1.25,2.6,5.4]]},
+ aspide:{L:7,S:2.4,paint:'#666b52',out:[[0,1],[1.2,1],[1.2,7],[0,7]],det:[['line',0,0,0,1],['tubes',4,1,1.8,6.6]]},
+};
+const modelOf = d => MODELS[d.model || d.id];
+// детермінований камуфляж і спроба підвантажити власні PNG із sprites/
+function seeded(id) { let h = 7; for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) | 0; return () => ((h = (h * 1103515245 + 12345) | 0) >>> 16 & 0x7fff) / 0x7fff; }
+for (const [id, m] of Object.entries(MODELS)) {
+  m.id = id;
+  if (m.camo) { const r = seeded(id); m.blobs = Array.from({length: 10}, () => ({x: (r() - .5) * m.S, y: r() * m.L, rx: m.S * (.06 + r() * .12), ry: m.L * (.05 + r() * .1), a: r() * 3, c: m.camo[(r() * m.camo.length) | 0]})); }
+}
+// sprites/index.json — список id, для яких є PNG, напр. ["mig29","shahed"]
+fetch('sprites/index.json').then(r => r.ok ? r.json() : []).then(ids => ids.forEach(id => {
+  const m = MODELS[id]; if (!m) return;
+  const img = new Image(); img.onload = () => { m.img = img; }; img.src = `sprites/${id}.png`;
+})).catch(() => {});
+function shade(hex, k) {
+  const n = parseInt(hex.slice(1), 16), f = x => Math.round(k < 0 ? x * (1 + k) : x + (255 - x) * k);
+  return `rgb(${f(n >> 16)},${f(n >> 8 & 255)},${f(n & 255)})`;
+}
+function bodyPath(c, m) {
+  const p = m.out; c.beginPath();
+  p.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y));
+  for (let i = p.length - 1; i >= 0; i--) c.lineTo(-p[i][0], p[i][1]);
+  c.closePath();
+}
+// силует для тіні
+function drawShadow(c, m, px) {
+  const k = px / m.L; c.save(); c.scale(k, k); c.translate(0, -m.L / 2); c.fillStyle = 'rgba(0,0,0,.35)';
+  if (m.quad) c.fillRect(-m.S / 2, 0, m.S, m.L); else { bodyPath(c, m); c.fill(); }
+  c.restore();
+}
+function drawModel(c, m, px, o = {}) {
+  const k = px / m.L, t = o.t || 0, lw = 1 / k, base = m.paint, mir = f => { f(1); f(-1); };
+  c.save(); c.scale(k, k); c.translate(0, -m.L / 2);
+  if (m.img) {
+    c.drawImage(m.img, -m.S / 2, 0, m.S, m.L);
+    if (o.edge) { c.strokeStyle = o.edge; c.lineWidth = lw * 1.5; c.strokeRect(-m.S / 2, 0, m.S, m.L); }
+    c.restore(); return;
+  }
+  if (m.quad) {
+    const h = m.L / 2; c.translate(0, h);
+    c.strokeStyle = base; c.lineWidth = .08; c.beginPath(); c.moveTo(-h, -h); c.lineTo(h, h); c.moveTo(h, -h); c.lineTo(-h, h); c.stroke();
+    for (const [x, y] of [[-1,-1],[1,-1],[1,1],[-1,1]]) { c.beginPath(); c.arc(x * h, y * h, h * .45, 0, 7); c.fillStyle = 'rgba(40,40,40,.35)'; c.fill(); c.strokeStyle = o.edge || '#111'; c.lineWidth = lw; c.stroke(); }
+    c.fillStyle = base; c.fillRect(-h * .3, -h * .3, h * .6, h * .6); c.strokeRect(-h * .3, -h * .3, h * .6, h * .6);
+    c.restore(); return;
+  }
+  // корпус: обʼєм градієнтом поперек, камуфляж, хребет
+  const gr = c.createLinearGradient(-m.S / 2, 0, m.S / 2, 0);
+  gr.addColorStop(0, shade(base, -.45)); gr.addColorStop(.5, shade(base, .2)); gr.addColorStop(1, shade(base, -.45));
+  bodyPath(c, m); c.fillStyle = gr; c.fill();
+  if (m.blobs && px > 18) {
+    c.save(); bodyPath(c, m); c.clip(); c.globalAlpha = .55;
+    for (const b of m.blobs) { c.fillStyle = b.c; c.beginPath(); c.ellipse(b.x, b.y, b.rx, b.ry, b.a, 0, 7); c.fill(); }
+    c.restore();
+  }
+  const dark = shade(base, -.65);
+  c.lineWidth = lw * .8; c.strokeStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.moveTo(0, m.L * .04); c.lineTo(0, m.L * .96); c.stroke();
+  for (const d of m.det || []) {
+    const [type] = d;
+    if (type === 'canopy') {
+      const cg = c.createLinearGradient(-d[2], d[1] - d[3], d[2], d[1] + d[3]); cg.addColorStop(0, '#9cc4e0'); cg.addColorStop(.4, '#2d5170'); cg.addColorStop(1, '#0b1a2a');
+      c.beginPath(); c.ellipse(0, d[1], d[2], d[3], 0, 0, 7); c.fillStyle = cg; c.fill(); c.strokeStyle = dark; c.lineWidth = lw * .7; c.stroke();
+    } else if (type === 'fin') {
+      const draw = s => { c.beginPath(); c.moveTo(s * d[1], d[2]); c.lineTo(s * d[1], d[3]); c.stroke(); };
+      c.lineCap = 'round'; c.strokeStyle = dark; c.lineWidth = Math.max(lw * 2.6, m.L * .025); (d[1] ? mir : f => f(0))(draw);
+      c.strokeStyle = shade(base, .25); c.lineWidth = Math.max(lw * .8, m.L * .008); (d[1] ? mir : f => f(0))(draw); c.lineCap = 'butt';
+    } else if (type === 'eng') mir(s => { c.fillStyle = shade(base, -.25); c.fillRect(s * d[1] - d[4] / 2, d[2], d[4], d[3] - d[2]); c.strokeStyle = dark; c.lineWidth = lw * .6; c.strokeRect(s * d[1] - d[4] / 2, d[2], d[4], d[3] - d[2]); });
+    else if (type === 'nozzle') (d[1] ? mir : f => f(1))(s => { const ng = c.createRadialGradient(s * d[1], d[2], 0, s * d[1], d[2], d[3]); ng.addColorStop(0, '#000'); ng.addColorStop(.7, '#2a2a2a'); ng.addColorStop(1, '#666'); c.fillStyle = ng; c.beginPath(); c.arc(s * d[1], d[2], d[3], 0, 7); c.fill(); });
+    else if (type === 'tip') mir(s => { c.fillStyle = shade(base, .1); c.beginPath(); c.ellipse(s * d[1], (d[2] + d[3]) / 2, d[4], (d[3] - d[2]) / 2, 0, 0, 7); c.fill(); c.strokeStyle = dark; c.lineWidth = lw * .7; c.stroke(); });
+    else if (type === 'poly') mir(s => { c.beginPath(); d[1].forEach(([x, y], i) => i ? c.lineTo(s * x, y) : c.moveTo(s * x, y)); c.closePath(); c.fillStyle = shade(base, -.1); c.fill(); c.strokeStyle = dark; c.lineWidth = lw * .7; c.stroke(); });
+    else if (type === 'rotor') {
+      c.fillStyle = 'rgba(20,20,20,.22)'; c.beginPath(); c.arc(0, d[1], d[2], 0, 7); c.fill();
+      c.strokeStyle = 'rgba(15,15,15,.85)'; c.lineWidth = Math.max(lw * 1.5, .35);
+      c.beginPath(); for (let i = 0; i < d[3]; i++) { const a = t * 25 + i * 2 * Math.PI / d[3]; c.moveTo(0, d[1]); c.lineTo(Math.cos(a) * d[2], d[1] + Math.sin(a) * d[2]); } c.stroke();
+      c.fillStyle = '#222'; c.beginPath(); c.arc(0, d[1], .45, 0, 7); c.fill();
+    } else if (type === 'trotor') { c.strokeStyle = 'rgba(15,15,15,.8)'; c.lineWidth = Math.max(lw, .2); const a = t * 40; c.beginPath(); c.moveTo(.4, d[1] - Math.cos(a) * d[2]); c.lineTo(.4, d[1] + Math.cos(a) * d[2]); c.stroke(); }
+    else if (type === 'prop') { c.fillStyle = 'rgba(20,20,20,.25)'; c.beginPath(); c.ellipse(0, d[1], d[2], d[2] * .25, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(10,10,10,.8)'; c.lineWidth = Math.max(lw, d[2] * .12); c.beginPath(); c.moveTo(-d[2] * Math.cos(t * 30), d[1]); c.lineTo(d[2] * Math.cos(t * 30), d[1]); c.stroke(); }
+    else if (type === 'circ') (d[1] ? mir : f => f(1))(s => { const cg = c.createRadialGradient(s * d[1] - d[3] * .3, d[2] - d[3] * .3, 0, s * d[1], d[2], d[3]); cg.addColorStop(0, shade(base, .3)); cg.addColorStop(1, shade(base, -.4)); c.fillStyle = cg; c.beginPath(); c.arc(s * d[1], d[2], d[3], 0, 7); c.fill(); c.strokeStyle = dark; c.lineWidth = lw * .7; c.stroke(); });
+    else if (type === 'cab') { c.fillStyle = shade(base, -.2); c.fillRect(-m.S / 2, d[1], m.S, d[2] - d[1]); c.fillStyle = 'rgba(40,70,95,.9)'; c.fillRect(-m.S * .38, d[1] + .25, m.S * .76, .45); }
+    else if (type === 'line') (d[1] || d[3] ? mir : f => f(1))(s => { c.strokeStyle = dark; c.lineWidth = Math.max(lw, .12); c.beginPath(); c.moveTo(s * d[1], d[2]); c.lineTo(s * d[3], d[4]); c.stroke(); });
+    else if (type === 'tracks') mir(s => { c.fillStyle = '#26271f'; c.fillRect(s * d[1] - d[4] / 2, d[2], d[4], d[3] - d[2]); c.strokeStyle = '#4a4a3c'; c.lineWidth = .06; for (let y = d[2]; y < d[3]; y += .35) { c.beginPath(); c.moveTo(s * d[1] - d[4] / 2, y); c.lineTo(s * d[1] + d[4] / 2, y); c.stroke(); } });
+    else if (type === 'tubes') {
+      const [, n, half, y0, y1] = d, st = 2 * half / n;
+      for (let i = 0; i < n; i++) {
+        const x = -half + st * i + st * .1, w = st * .8, tg = c.createLinearGradient(x, 0, x + w, 0);
+        tg.addColorStop(0, shade(base, -.3)); tg.addColorStop(.5, shade(base, .25)); tg.addColorStop(1, shade(base, -.3));
+        c.fillStyle = tg; c.fillRect(x, y0, w, y1 - y0); c.fillStyle = '#1a1a1a'; c.fillRect(x, y1 - .25, w, .25);
+      }
+    }
+  }
+  bodyPath(c, m); c.lineWidth = o.edge ? lw * 1.4 : lw * .9; c.strokeStyle = o.edge || dark; c.stroke();
+  c.restore();
+}
+function drawFit(cv, d) {
+  const c = cv.getContext('2d'), s = cv.width, m = modelOf(d);
+  if (d.dim) return drawMissile(cv, d); // ракета з вкладки «Ракети»
+  if (SET.cx3d && G3) return G3.snap(cv, m);
+  c.clearRect(0, 0, s, s);
+  const px = .84 * s * m.L / Math.max(m.L, m.S);
+  c.save(); c.translate(s / 2 + s * .03, s / 2 + s * .04); drawShadow(c, m, px); c.restore();
+  c.save(); c.translate(s / 2, s / 2); drawModel(c, m, px, {t: .3}); c.restore();
+}
+const modelPx = d => 10 + Math.sqrt(modelOf(d).L) * 5.5;
+// ракета в довіднику: 3D-знімок або 2D-малюнок у реальних пропорціях (ніс угору-праворуч)
+function drawMissile(cv, d) {
+  if (SET.cx3d && G3) return G3.snapMsl(cv, d.id);
+  const c = cv.getContext('2d'), s = cv.width, [len, dia] = d.dim, k = s * .8 / len, w = Math.max(3, dia * k), L = len * k;
+  c.clearRect(0, 0, s, s); c.save(); c.translate(s / 2, s / 2); c.rotate(-Math.PI / 4);
+  const gr = c.createLinearGradient(0, -w / 2, 0, w / 2); gr.addColorStop(0, '#7d7d76'); gr.addColorStop(.5, '#f0eee6'); gr.addColorStop(1, '#7d7d76');
+  c.fillStyle = gr; c.fillRect(-L / 2, -w / 2, L * .85, w);
+  c.beginPath(); c.moveTo(L * .35, -w / 2); c.lineTo(L / 2, 0); c.lineTo(L * .35, w / 2); c.fill();
+  c.fillStyle = '#6b6b65';
+  for (const sg of [1, -1]) { c.beginPath(); c.moveTo(-L / 2, sg * w / 2); c.lineTo(-L / 2, sg * w * 1.9); c.lineTo(-L / 2 + L * .12, sg * w / 2); c.fill(); }
+  c.fillStyle = '#c0392b'; c.fillRect(L * .1, -w / 2, L * .03, w); // маркувальна смуга
+  c.restore();
+}
+
+const toLL = (x, y) => L.latLng(LAT0 + y / KY, LNG0 + x / KX);
+// ================= SETTINGS & AUDIO =================
+const SET = {master: .8, sfx: .8, music: .35, siren: true, ranges: true, labels: true, shake: true, shadows: true, routes: true, diff: 2, cx3d: true,
+  v3_air: true, v3_heli: true, v3_uav: true, v3_enemy: true, v3_sam: true};
+try { Object.assign(SET, JSON.parse(localStorage.getItem('kupol-settings') || '{}')); } catch (e) {}
+const saveSet = () => { try { localStorage.setItem('kupol-settings', JSON.stringify(SET)); } catch (e) {} };
+
+const AU = {
+  ctx: null,
+  init() {
+    if (this.ctx) return;
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    const c = this.ctx = new C();
+    this.master = c.createGain(); this.master.connect(c.destination);
+    this.sfx = c.createGain(); this.sfx.connect(this.master);
+    this.mus = c.createGain(); this.mus.connect(this.master);
+    this.nb = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+    const d = this.nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    this.apply(); this.music();
+  },
+  apply() { if (!this.ctx) return; this.master.gain.value = SET.master; this.sfx.gain.value = SET.sfx; this.mus.gain.value = SET.music * .3; },
+  noise(dur, f0, f1, vol) {
+    const c = this.ctx; if (!c) return;
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t = c.currentTime;
+    s.buffer = this.nb; f.type = 'lowpass';
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    s.connect(f); f.connect(g); g.connect(this.sfx); s.start(t); s.stop(t + dur);
+  },
+  tone(fr, dur, vol, type = 'sine') {
+    const c = this.ctx; if (!c) return;
+    const o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+    o.type = type; o.frequency.value = fr; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g); g.connect(this.sfx); o.start(t); o.stop(t + dur);
+  },
+  launch() { this.noise(1.1, 4000, 300, .18); },
+  gun() { for (let i = 0; i < 6; i++) setTimeout(() => this.noise(.06, 3000, 600, .14), i * 40); },
+  lock() { this.tone(1500, .05, .04, 'square'); },
+  boom() { this.noise(1.2, 1200, 80, .35); },
+  impact() { this.noise(2.6, 500, 30, .9); },
+  click() { this.tone(880, .05, .08, 'square'); },
+  coin() { this.tone(1320, .08, .06, 'triangle'); },
+  chime() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, .5, .12), i * 140)); },
+  warn() { [0, 1, 2].forEach(i => setTimeout(() => this.tone(1000, .12, .1, 'square'), i * 200)); },
+  siren() {
+    const c = this.ctx; if (!c || !SET.siren) return;
+    const o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+    o.type = 'sawtooth';
+    for (let i = 0; i < 3; i++) { o.frequency.setValueAtTime(380, t + i * 2.4); o.frequency.linearRampToValueAtTime(820, t + i * 2.4 + 1.2); o.frequency.linearRampToValueAtTime(380, t + i * 2.4 + 2.4); }
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.1, t + .4); g.gain.setValueAtTime(.1, t + 6.8); g.gain.linearRampToValueAtTime(0, t + 7.2);
+    o.connect(g); g.connect(this.sfx); o.start(t); o.stop(t + 7.3);
+  },
+  music() {
+    const c = this.ctx;
+    [55, 82.4, 110.6, 164.8].forEach((fr, i) => {
+      const o = c.createOscillator(), f = c.createBiquadFilter(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain();
+      o.type = 'triangle'; o.frequency.value = fr; o.detune.value = i * 5;
+      f.type = 'lowpass'; f.frequency.value = 260; l.frequency.value = .04 + i * .025; lg.gain.value = 160;
+      g.gain.value = i === 3 ? .25 : .5;
+      l.connect(lg); lg.connect(f.frequency); o.connect(f); f.connect(g); g.connect(this.mus); o.start(); l.start();
+    });
+  },
+};
+addEventListener('pointerdown', () => { AU.init(); if (AU.ctx && AU.ctx.state === 'suspended') AU.ctx.resume(); }, true);
+
+// ================= MAP =================
+const map = L.map('map', {zoomControl: false, minZoom: 5, maxZoom: 14, zoomSnap: .25, doubleClickZoom: false}).fitBounds(UKR);
+L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+  subdomains: 'abc', maxZoom: 17,
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, SRTM | © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
+}).addTo(map);
+const opMarkers = [['Київ',50.45,30.52,true],['Харків',49.99,36.23],['Одеса',46.48,30.73],['Дніпро',48.46,35.04],['Львів',49.84,24.03]]
+  .map(([n, a, b, on]) => L.circleMarker([a, b], {radius: on ? 9 : 6, color: on ? '#4fd1e0' : '#7fa3ab', weight: 2, fillOpacity: .4}).bindTooltip(n));
+// область: яскрава межа + затемнення всього, що поза нею
+const oblLayer = L.layerGroup([
+  L.polygon([[[85, -180], [85, 180], [-85, 180], [-85, -180]], OBL_POLY], {stroke: false, fillColor: '#000', fillOpacity: .38, interactive: false}),
+  L.polyline(OBL_POLY, {color: '#000', weight: 6, opacity: .5, interactive: false}),
+  L.polyline(OBL_POLY, {color: '#ffd54a', weight: 3, dashArray: '10 6', interactive: false}),
+]);
+const P = (x, y) => map.latLngToContainerPoint(toLL(x, y));
+const kmPx = () => (P(10, 0).x - P(0, 0).x) / 10;
+
+const fx = document.getElementById('fx'), g = fx.getContext('2d');
+function resize() { const r = devicePixelRatio || 1; fx.width = innerWidth * r; fx.height = innerHeight * r; fx.style.width = innerWidth + 'px'; fx.style.height = innerHeight + 'px'; }
+addEventListener('resize', resize); resize();
+
+// ================= 3D (Three.js): обʼємні моделі поверх 2D-карти =================
+// Моделі збираються з тих самих реальних розмірів (метри): крило, фюзеляж, кілі, кабіна, двигуни, гвинти.
+// Власні .glb кладуться в models/ і перелічуються в models/index.json — тоді замінюють вбудовані.
+// Деталі лише для 3D (метри від носа): hp — точки підвіски під крилом (права сторона, від кінця крила до фюзеляжу),
+// hpC — під фюзеляжем, intake — повітрозабірники [x, y0, y1, ширина, висота, знизу?], fins — додаткові кілі, nose — частка довжини на обтічник.
+const DETAIL3D = {
+  mig29: {hp: [[4.4, 11.7], [3.5, 11.1], [2.6, 10.5]], hpC: [[0, 10]], intake: [[1.05, 6.2, 8.6, .75, .6]]},
+  su27: {hp: [[7.35, 15.4], [5.6, 13.9], [4.2, 12.8], [2.9, 11.8]], hpC: [[0, 11]], intake: [[1.15, 7, 10.8, .85, .7]]},
+  f16: {hp: [[4.98, 10.8], [3.9, 10.6], [2.8, 10.2]], hpC: [[0, 9]], intake: [[0, 4.6, 6.8, .95, .6, true]]},
+  m2000: {hp: [[3.4, 12], [2.3, 10.8], [1.4, 9.6]], hpC: [[0, 9]], intake: [[.9, 4.6, 7.2, .45, .6]]},
+  gripen: {hp: [[4.2, 12.5], [3.2, 11.3], [2.2, 10.4]], hpC: [[0, 9]], intake: [[.8, 4.2, 6.2, .45, .55]]},
+  su24: {hp: [[4.6, 11.1], [3.2, 10.8]], hpC: [[0, 12]], intake: [[1.5, 6.6, 9.6, .7, .7]]},
+  su25: {hp: [[5.6, 8.4], [4.4, 8.2], [3.2, 8]]},
+  l39: {hp: [[2.6, 6.7]], intake: [[.62, 4.3, 5.9, .3, .4]]},
+  mi24: {hp: [[2.9, 7], [2, 7]], fins: [[0, 15.8, 17.4]]},
+  mi8: {hp: [[1.7, 6.5]], fins: [[0, 16.8, 18.2]]},
+  kh101: {nose: .12}, kalibr: {nose: .1}, iskander: {nose: .2}, kinzhal: {nose: .22},
+};
+// розміри ракет «повітря-повітря»: [довжина, діаметр], м
+const MSL3 = {r60: [2.1, .12], r73: [2.9, .17], r27r: [4.08, .23], r27er: [4.78, .26], aim9m: [2.87, .13], aim9x: [3.02, .13], aim120: [3.65, .18], mica: [3.1, .16], magic: [2.75, .16], irist: [2.94, .13], meteor: [3.65, .18], igla: [1.57, .07]};
+const G3 = (() => {
+  const T = window.THREE; if (!T) return null;
+  let R, SR;
+  try {
+    R = new T.WebGLRenderer({canvas: document.getElementById('gl'), alpha: true, antialias: true});
+    SR = new T.WebGLRenderer({canvas: document.createElement('canvas'), alpha: true, antialias: true, preserveDrawingBuffer: true});
+  } catch (e) { return null; }
+  R.setPixelRatio(devicePixelRatio || 1); SR.setSize(256, 256, false);
+  const scene = new T.Scene(), cam = new T.OrthographicCamera(0, 1, 0, -1, -3000, 3000);
+  const lights = s => { s.add(new T.HemisphereLight(0xe8f0f5, 0x404530, .85)); const sun = new T.DirectionalLight(0xffffff, .9); sun.position.set(-.6, .7, 1); s.add(sun); };
+  lights(scene);
+  const size = () => { R.setSize(innerWidth, innerHeight); cam.right = innerWidth; cam.bottom = -innerHeight; cam.updateProjectionMatrix(); };
+  addEventListener('resize', size); size();
+  const V = (x = 0, y = 0, z = 0) => new T.Vector3(x, y, z);
+  const glass = new T.MeshStandardMaterial({color: 0x1a3954, metalness: .7, roughness: .15, emissive: 0x0a1a28});
+  const darkM = new T.MeshStandardMaterial({color: 0x1d1d1d, roughness: .6, metalness: .4});
+  const bladeM = new T.MeshStandardMaterial({color: 0x151515, roughness: .8});
+  const discM = new T.MeshBasicMaterial({color: 0x111111, transparent: true, opacity: .16, side: T.DoubleSide, depthWrite: false});
+  const shadowM = new T.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: .33, depthWrite: false, side: T.DoubleSide});
+  const flameM = new T.MeshBasicMaterial({color: 0xffa040, transparent: true, opacity: .85, blending: T.AdditiveBlending, depthWrite: false});
+  const mslM = new T.MeshStandardMaterial({color: 0xdedad0, roughness: .5, metalness: .2});
+  const tankM = new T.MeshStandardMaterial({color: 0x9aa1a6, roughness: .55, metalness: .3});
+  const uaBlue = new T.MeshBasicMaterial({color: 0x0057b7}), uaYellow = new T.MeshBasicMaterial({color: 0xffd700});
+  const navR = new T.MeshBasicMaterial({color: 0xff2020}), navG = new T.MeshBasicMaterial({color: 0x20ff40});
+  const OWN = new Set([...AIR, ...UAV].map(d => d.id));
+  const VEH = new Set(SAM.map(d => d.id)), tmpl = {}, shGeo = {};
+  const shapeOf = m => {
+    const s = new T.Shape(), pts = [...m.out, ...m.out.slice().reverse().map(([x, y]) => [-x, y])];
+    pts.forEach(([x, y], i) => i ? s.lineTo(x, m.L / 2 - y) : s.moveTo(x, m.L / 2 - y)); return s;
+  };
+  const shadowGeo = m => shGeo[m.id] ||= m.quad ? new T.PlaneGeometry(m.L, m.L) : new T.ShapeGeometry(shapeOf(m));
+  function camoTex(m) {
+    if (!m.blobs) return null;
+    const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+    x.fillStyle = m.paint; x.fillRect(0, 0, 256, 256); x.globalAlpha = .6;
+    for (const b of m.blobs) { x.fillStyle = b.c; x.beginPath(); x.ellipse((b.x / m.S + .5) * 256, b.y / m.L * 256, b.rx / m.S * 256, b.ry / m.L * 256, b.a, 0, 7); x.fill(); }
+    const t = new T.CanvasTexture(c); t.repeat.set(1 / m.S, 1 / m.L); t.offset.set(.5, .5); return t;
+  }
+  const basis = new T.Matrix4().makeBasis(V(0, 1, 0), V(0, 0, 1), V(1, 0, 0)); // (довжина, висота, товщина) → (Y, Z, X)
+  function build(m) {
+    const root = new T.Group(), g = new T.Group(); root.add(g);
+    const L = m.L, Y = y => L / 2 - y, veh = VEH.has(m.id);
+    const paint = new T.MeshStandardMaterial({color: m.paint, map: camoTex(m), roughness: .65, metalness: veh ? .05 : .25});
+    const paintD = new T.MeshStandardMaterial({color: new T.Color(m.paint).multiplyScalar(.7), roughness: .6, metalness: .3});
+    const add = (geo, mat, x = 0, y = 0, z = 0) => { const me = new T.Mesh(geo, mat); me.position.set(x, y, z); g.add(me); return me; };
+    const both = (x, fn) => x ? [1, -1].forEach(s => fn(s * x, s)) : fn(0, 0);
+    if (m.quad) {
+      const h = L / 2;
+      for (const a of [1, -1]) { const arm = add(new T.BoxGeometry(L * 1.4, .04, .03), darkM); arm.rotation.z = a * Math.PI / 4; }
+      add(new T.BoxGeometry(h * .6, h * .6, h * .25), paint);
+      for (const [a, b] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+        add(new T.CircleGeometry(h * .45, 20), discM, a * h, b * h, .05);
+        const pr = new T.Group(); pr.position.set(a * h, b * h, .06); pr.userData.spin = 'z'; pr.add(new T.Mesh(new T.BoxGeometry(h * .9, .03, .01), bladeM)); g.add(pr);
+      }
+      return root;
+    }
+    const th = veh ? 1.4 : Math.max(.04, L * .022);
+    add(new T.ExtrudeGeometry(shapeOf(m), {depth: th, bevelEnabled: !veh, bevelThickness: th * .4, bevelSize: Math.min(m.S, L) * .008, bevelSegments: 1}), paint, 0, 0, veh ? .5 : -th / 2);
+    const top = veh ? 1.9 : th / 2;
+    let r = 0;
+    const X = DETAIL3D[m.id] || {};
+    if (!veh) { // фюзеляж — тіло обертання; у ракет — довгий обтічник
+      r = m.fr || Math.max(.05, Math.min(m.out[2][0] * .95, m.S * .22));
+      const n = X.nose, pts = n
+        ? [[.001, L / 2], [r * .6, L / 2 - L * n * .5], [r * .95, L / 2 - L * n], [r, L / 2 - L * n * 1.3], [r, -L / 2 + L * .02], [.001, -L / 2]]
+        : [[.001, L / 2], [r * .5, L / 2 - L * .07], [r * .9, L / 2 - L * .18], [r, L / 2 - L * .3], [r, -L / 2 + L * .35], [r * .45, -L / 2 + .02], [.001, -L / 2]];
+      const f = add(new T.LatheGeometry(pts.map(([a, b]) => new T.Vector2(a, b)), 16), paint); f.scale.z = n ? 1 : .8;
+      if (!n && AIR.some(a => a.id === m.id)) { // темний радіопрозорий обтічник носа
+        const rc = add(new T.ConeGeometry(r * .5, L * .07, 14), darkM, 0, L / 2 - L * .035, 0); rc.scale.z = .8;
+      }
+    }
+    const dets = [...(m.det || []), ...(X.fins || []).map(f => ['fin', ...f]), ...(X.intake || []).map(i => ['intake', ...i])];
+    for (const d of dets) {
+      const ty = d[0];
+      if (ty === 'canopy') { const c = add(new T.SphereGeometry(1, 16, 10), glass, 0, Y(d[1]), Math.max(r * .55, top)); c.scale.set(d[2], d[3], Math.max(d[2] * .8, .1)); }
+      else if (ty === 'fin') both(d[1], (x, s) => {
+        const len = d[3] - d[2], h = len * .55;
+        const geo = new T.ExtrudeGeometry(new T.Shape([new T.Vector2(0, 0), new T.Vector2(len, 0), new T.Vector2(len * .35, h), new T.Vector2(-len * .05, h)]), {depth: Math.max(.04, len * .03), bevelEnabled: false});
+        geo.applyMatrix4(basis); const me = add(geo, paint, x, Y(d[3]), Math.max(r * .4, top)); me.rotation.y = s * .28;
+      });
+      else if (ty === 'eng') both(d[1], x => add(new T.CylinderGeometry(d[4] / 2, d[4] / 2, d[3] - d[2], 12), paintD, x, Y((d[2] + d[3]) / 2), 0));
+      else if (ty === 'nozzle') both(d[1], x => {
+        add(new T.CylinderGeometry(d[3], d[3] * .85, d[3] * .9, 12), darkM, x, Y(d[2]), 0);
+        if (AIR.some(a => a.id === m.id)) { // факел форсажу — вмикається на перехопленні
+          const fl = add(new T.ConeGeometry(d[3] * .8, d[3] * 6, 10, 1, true), flameM, x, Y(d[2]) - d[3] * 3.2, 0);
+          fl.rotation.x = Math.PI; fl.userData.flame = true; fl.visible = false;
+        }
+      });
+      else if (ty === 'intake') both(d[1], x => {
+        const len = d[3] - d[2], z = d[6] ? -d[5] * .6 : 0;
+        add(new T.BoxGeometry(d[4], len, d[5]), paintD, x, Y((d[2] + d[3]) / 2), z);
+        add(new T.BoxGeometry(d[4] * .8, .06, d[5] * .75), darkM, x, Y(d[2]) + .02, z); // отвір
+      });
+      else if (ty === 'tip') both(d[1], x => { const t = add(new T.SphereGeometry(1, 12, 8), paint, x, Y((d[2] + d[3]) / 2), 0); t.scale.set(d[4], (d[3] - d[2]) / 2, d[4]); });
+      else if (ty === 'poly') both(1, (x, s) => { const p = d[1].map(([px, py]) => new T.Vector2(s * px, Y(py))); if (s < 0) p.reverse(); add(new T.ExtrudeGeometry(new T.Shape(p), {depth: .15, bevelEnabled: false}), paint); });
+      else if (ty === 'rotor') {
+        const z = Math.max(r * 1.4, 1), hub = new T.Group(); hub.position.set(0, Y(d[1]), z); hub.userData.spin = 'z';
+        for (let i = 0; i < d[3]; i++) { const arm = new T.Group(), b = new T.Mesh(new T.BoxGeometry(d[2], d[2] * .055, .06), bladeM); b.position.x = d[2] / 2; arm.rotation.z = i * 2 * Math.PI / d[3]; arm.add(b); hub.add(arm); }
+        g.add(hub); add(new T.CircleGeometry(d[2], 40), discM, 0, Y(d[1]), z);
+      } else if (ty === 'trotor') { const h = new T.Group(); h.position.set(.35, Y(d[1]), Math.max(r, .5)); h.userData.spin = 'x'; h.add(new T.Mesh(new T.BoxGeometry(.05, d[2] * 2, d[2] * .15), bladeM)); g.add(h); }
+      else if (ty === 'prop') {
+        const h = new T.Group(); h.position.set(0, Y(d[1]), 0); h.userData.spin = 'y'; h.add(new T.Mesh(new T.BoxGeometry(d[2] * 2, Math.max(.02, d[2] * .08), d[2] * .12), bladeM)); g.add(h);
+        add(new T.CircleGeometry(d[2], 24), discM, 0, Y(d[1]), 0).rotation.x = Math.PI / 2;
+      } else if (ty === 'circ') both(d[1], x => { add(new T.CylinderGeometry(d[3], d[3], d[3] * .7, 16), paint, x, Y(d[2]), top + d[3] * .35).rotation.x = Math.PI / 2; });
+      else if (ty === 'cab') {
+        add(new T.BoxGeometry(m.S * .98, d[2] - d[1], 1.6), paintD, 0, Y((d[1] + d[2]) / 2), top + .8);
+        add(new T.BoxGeometry(m.S * .8, .08, .6), glass, 0, Y(d[1]) + .02, top + 1.1); // лобове скло
+      }
+      else if (ty === 'tracks') both(d[1], x => add(new T.BoxGeometry(d[4], d[3] - d[2], 1), darkM, x, Y((d[2] + d[3]) / 2), .5));
+      else if (ty === 'line') { const len = Math.hypot(d[3] - d[1], d[4] - d[2]) || .1; for (const s of (d[1] || d[3]) ? [1, -1] : [1]) add(new T.BoxGeometry(.15, len, .15), paintD, s * (d[1] + d[3]) / 2, Y((d[2] + d[4]) / 2), top); }
+      else if (ty === 'tubes') { // контейнери ракет, підняті в похідно-бойове положення
+        const [, n, half, y0, y1] = d, st = 2 * half / n, w = st * .8, hgt = Math.min(w, .9), rack = new T.Group();
+        rack.position.set(0, Y(y1), top); rack.rotation.x = .25;
+        for (let i = 0; i < n; i++) { const b = new T.Mesh(new T.BoxGeometry(w, y1 - y0, hgt), paint); b.position.set(-half + st * (i + .5), (y1 - y0) / 2, hgt / 2 + .1); rack.add(b); }
+        g.add(rack);
+      }
+    }
+    if (veh && !['buk', 's200', 's125'].includes(m.id)) { // колеса: вантажівки — по всій довжині, причепи — одна-дві осі ззаду
+      const trailer = ['nasams', 'hawk', 'aspide'].includes(m.id), n = trailer ? 2 : Math.max(3, Math.round((L - 2) / 2.3));
+      const y0 = trailer ? L * .55 : 1.4, y1 = L - 1.2;
+      for (let i = 0; i < n; i++) for (const s of [1, -1]) {
+        const w = add(new T.CylinderGeometry(.55, .55, .4, 14), darkM, s * (m.S / 2 - .15), Y(y0 + (y1 - y0) * i / (n - 1)), .55); w.rotation.z = Math.PI / 2;
+      }
+    }
+    if (OWN.has(m.id) && !veh) { // розпізнавальні знаки ПС ЗСУ і аеронавігаційні вогні на кінцях крила
+      const tip = m.out.reduce((a, p) => p[0] > a[0] ? p : a), rr = Math.max(.08, m.S * .045), z = th / 2 + .03;
+      both(tip[0] * .62, x => { add(new T.CircleGeometry(rr, 20), uaBlue, x, Y(tip[1] + .2), z); add(new T.CircleGeometry(rr * .5, 16), uaYellow, x, Y(tip[1] + .2), z + .01); });
+      const lr = Math.max(.05, m.S * .012);
+      add(new T.SphereGeometry(lr, 8, 6), navG, tip[0], Y(tip[1]), 0); add(new T.SphereGeometry(lr, 8, 6), navR, -tip[0], Y(tip[1]), 0);
+    }
+    return root;
+  }
+  // підвіска: баки займають точки ближче до фюзеляжу, ракети — від кінців крила
+  const mslTpl = {};
+  function mslObj(id) {
+    if (!mslTpl[id]) {
+      const [len, d] = MSL3[id] || SAM_MSL[id]?.dim || [3, .15], g = new T.Group();
+      const body = new T.Mesh(new T.CylinderGeometry(d / 2, d / 2, len * .85, 8), mslM); body.position.y = -len * .075; g.add(body);
+      const nose = new T.Mesh(new T.ConeGeometry(d / 2, len * .15, 8), mslM); nose.position.y = len * .425; g.add(nose);
+      for (const a of [0, Math.PI / 2]) { const f = new T.Mesh(new T.BoxGeometry(d * 3.2, len * .12, .02), mslM); f.position.y = -len * .42; f.rotation.y = a; g.add(f); }
+      mslTpl[id] = g;
+    }
+    return mslTpl[id].clone();
+  }
+  function tankObj(m) { const h = Math.min(2.4, m.L * .13), t = new T.Mesh(new T.SphereGeometry(1, 12, 8), tankM); t.scale.set(h * .16, h, h * .16); return t; }
+  function stores(m, o) {
+    const X = DETAIL3D[m.id] || {}, grp = new T.Group(), th = Math.max(.04, m.L * .022);
+    const slots = [...(X.hpC || []), ...(X.hp || []).slice().reverse().flatMap(([x, y]) => [[x, y], [-x, y]])];
+    const put = (obj, [x, y], dz) => { obj.position.set(x, m.L / 2 - y, -(th / 2 + dz)); grp.add(obj); };
+    let i = 0, j = slots.length - 1;
+    for (let k = 0; k < (o.ptb || 0) && i <= j; k++) put(tankObj(m), slots[i++], .45);
+    for (const [id, n] of Object.entries(o.load || {})) for (let k = 0; k < n && j >= i; k++) put(mslObj(id), slots[j--], (MSL3[id]?.[1] || .15) / 2 + .12);
+    return grp;
+  }
+  const tp = id => tmpl[id] ||= build(MODELS[id]);
+  const live = new Map(), qT = new T.Quaternion().setFromAxisAngle(V(1, 0, 0), -.55), qY = new T.Quaternion(), qR = new T.Quaternion(), AZ = V(0, 0, 1), AY = V(0, 1, 0);
+  let frame = 0;
+  function place(o, m, px, off, bankMax, now) {
+    const t0 = tp(m.id); let r = live.get(o);
+    if (!r || r.t0 !== t0) {
+      if (r) scene.remove(r.g, r.sh);
+      r = {g: t0.clone(), sh: new T.Mesh(shadowGeo(m), shadowM), t0, bank: 0, spin: [], flames: []};
+      r.g.traverse(c => { if (c.userData.spin) r.spin.push(c); if (c.userData.flame) r.flames.push(c); }); scene.add(r.g, r.sh); live.set(o, r);
+    }
+    r.f = frame;
+    if (o.kind === 'air') {
+      const sig = JSON.stringify(o.load) + o.ptb; // перевісити ракети/баки, коли змінилась підвіска
+      if (r.sig !== sig) { r.sig = sig; if (r.stores) r.g.remove(r.stores); r.stores = stores(m, o); r.g.add(r.stores); }
+      const ab = o.state === 'intercept';
+      for (const f of r.flames) { f.visible = ab; if (ab) f.scale.set(1, .8 + Math.random() * .4, 1); }
+    }
+    const p = P(o.x, o.y), k = px / m.L;
+    r.g.position.set(p.x, -p.y, 0); r.g.scale.setScalar(k);
+    if (o.hd != null && G) { // крен — з реальної кутової швидкості розвороту
+      const dtg = G.time - (r.ht ?? G.time);
+      if (dtg > 0) { const da = ((o.hd - r.hd + Math.PI * 3) % (Math.PI * 2)) - Math.PI; r.bank += (Math.max(-1, Math.min(1, da / dtg / (o.turn || 1))) * bankMax - r.bank) * .15; }
+      r.hd = o.hd; r.ht = G.time;
+    }
+    qY.setFromAxisAngle(AZ, -(o.vr || 0)); qR.setFromAxisAngle(AY, r.bank);
+    r.g.quaternion.copy(qT).multiply(qY).multiply(qR); // нахил погляду · курс · крен
+    for (const c of r.spin) c.rotation[c.userData.spin] = now * (c.userData.spin === 'z' ? 25 : 40);
+    r.sh.visible = SET.shadows;
+    if (SET.shadows) { r.sh.position.set(p.x + off, -(p.y + off * 1.3), -1500); r.sh.scale.setScalar(k); r.sh.rotation.z = -(o.vr || 0); }
+  }
+  // власні .glb: glTF «вгору +Y, вперед +Z» → наші «вгору +Z, вперед +Y»; масштаб за реальною довжиною
+  if (T.GLTFLoader) fetch('models/index.json').then(r => r.ok ? r.json() : null).then(list => {
+    if (!list) return;
+    const loader = new T.GLTFLoader();
+    for (const [id, cfg] of Array.isArray(list) ? list.map(id => [id, {}]) : Object.entries(list)) {
+      const m = MODELS[id]; if (!m) continue;
+      loader.load(`models/${cfg.file || id + '.glb'}`, gl => {
+        const inner = gl.scene, w = new T.Group(), root = new T.Group();
+        inner.applyMatrix4(new T.Matrix4().makeRotationX(Math.PI / 2));
+        inner.applyMatrix4(new T.Matrix4().makeRotationZ(Math.PI + (cfg.rot || 0) * Math.PI / 180));
+        w.add(inner); const box = new T.Box3().setFromObject(w), sz = box.getSize(V());
+        inner.position.sub(box.getCenter(V())); w.scale.setScalar(m.L / (sz.y || 1)); root.add(w);
+        tmpl[id] = root; m.glb = cfg; // cfg: name/author/license/url — для підпису автора (CC BY вимагає)
+        if (menuScreen === 'codex') codex(cxTab);
+        if (G) renderCards();
+      }, undefined, () => {});
+    }
+  }).catch(() => {});
+  return {
+    begin() { frame++; },
+    place,
+    end() { for (const [o, r] of live) if (r.f !== frame) { scene.remove(r.g, r.sh); live.delete(o); } R.render(scene, cam); },
+    snapMsl(cv, id) {
+      const s = new T.Scene(), o = mslObj(id), len = (MSL3[id] || SAM_MSL[id].dim)[0], D = len * .6; lights(s);
+      o.rotation.z = -Math.PI / 4; s.add(o);
+      const c = new T.OrthographicCamera(-D, D, D, -D, -100, 100); c.position.set(D * .4, -D * .7, D); c.up.set(0, 0, 1); c.lookAt(0, 0, 0);
+      SR.render(s, c); const x = cv.getContext('2d'); x.clearRect(0, 0, cv.width, cv.height); x.drawImage(SR.domElement, 0, 0, cv.width, cv.height);
+    },
+    snap(cv, m) { // знімок 3/4 для довідника й карток
+      const s = new T.Scene(), obj = tp(m.id).clone(), ad = AIR.find(a => a.id === m.id); lights(s); s.add(obj);
+      if (ad && ad.aam.length) obj.add(stores(m, {load: {[ad.aam[0]]: ad.msl}, ptb: 0})); // показати з типовою підвіскою
+      const D = Math.max(m.L, m.S) * .62, c = new T.OrthographicCamera(-D, D, D, -D, -100, 100);
+      const sh = new T.Mesh(shadowGeo(m), shadowM); sh.position.z = -Math.max(m.L, m.S) * .2; s.add(sh);
+      c.position.set(D * .5, -D * .9, D * 1.1); c.up.set(0, 0, 1); c.lookAt(0, 0, 0);
+      SR.render(s, c); const x = cv.getContext('2d'); x.clearRect(0, 0, cv.width, cv.height); x.drawImage(SR.domElement, 0, 0, cv.width, cv.height);
+    },
+  };
+})();
+
+// ================= MENU =================
+const $ = id => document.getElementById(id);
+let menuScreen = 'main';
+function show(id) {
+  menuScreen = id;
+  document.querySelectorAll('#menu .screen').forEach(s => s.classList.toggle('hidden', s.id !== id));
+  $('menu').classList.toggle('hidden', !id);
+  opMarkers.forEach(m => id === 'ops' ? m.addTo(map) : m.remove());
+}
+let returnTo = 'main';
+const back = () => show(G ? 'pause' : 'main');
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => {
+  AU.click(); const to = b.dataset.go;
+  if (to === 'main' && G) return back(); // з гри «закрити» повертає в паузу
+  if (to === 'settings') returnTo = 'main'; show(to);
+});
+$('setX').onclick = () => { AU.click(); show(returnTo); };
+document.querySelectorAll('[data-set]').forEach(inp => {
+  const k = inp.dataset.set;
+  if (inp.type === 'checkbox') inp.checked = SET[k]; else inp.value = SET[k];
+  inp.oninput = () => { SET[k] = inp.type === 'checkbox' ? inp.checked : +inp.value; saveSet(); AU.apply(); };
+});
+$('opKyiv').onclick = () => { AU.click(); startOp(); };
+function renderDiff() {
+  $('diffBtns').innerHTML = DIFF.map((d, i) => `<button data-diff="${i}" class="${i === SET.diff ? 'on' : ''}" style="padding:6px 10px">${d.name}</button>`).join('');
+  const d = DIFF[SET.diff];
+  $('diffNote').textContent = `Цілей ×${d.count} · старт ${d.res} ⛁ · нагорода ×${d.reward} · розвідник наводить удар за ${Math.round(d.spot / 60)} хв`;
+  $('diffBtns').querySelectorAll('button').forEach(b => b.onclick = () => { AU.click(); SET.diff = +b.dataset.diff; saveSet(); renderDiff(); });
+}
+renderDiff();
+const resume = () => { AU.click(); V.paused = false; show(null); };
+$('resume').onclick = resume; $('pauseX').onclick = resume;
+$('pauseSettings').onclick = () => { AU.click(); returnTo = 'pause'; show('settings'); };
+$('pauseCodex').onclick = () => { AU.click(); show('codex'); };
+$('quit').onclick = () => { AU.click(); toMenu(); };
+$('mAgain').onclick = () => { $('modal').classList.add('hidden'); startOp(); };
+$('mMenu').onclick = () => { $('modal').classList.add('hidden'); toMenu(); };
+
+function extraRows(d) {
+  if (d.msl && d.cap) return [['Ракети', d.msl.map(k => `${SAM_MSL[k].name} (${SAM_MSL[k].note}, ${SAM_MSL[k].cost} ⛁)`).join('<br>')], ['Розгортання', `${d.cost} ⛁`]];
+  if (d.fuel) return [
+    ['Ракети', d.aam.length ? `до ${d.msl}: ` + d.aam.map(k => `${AAM[k].name} (${AAM[k].note})`).join(', ') : '—'],
+    ['Гармата', d.gun ? `${d.gun.name}, ${d.gun.rounds} снарядів` : '—'], ['Придбання', `${d.cost} ⛁`]];
+  if (d.cost) return [['Запуск', `${d.cost} ⛁`]];
+  return [];
+}
+// вкладка «Ракети»: зенітні та «повітря-повітря», з реальними розмірами (без поля cost — ціна в info)
+const MSL_LIST = () => [
+  ...Object.values(SAM_MSL).map(m => ({id: m.id, name: m.name, dim: m.dim, info: [['Тип', 'зенітна керована ракета'], ['Комплекс', SAM.filter(s => s.msl.includes(m.id)).map(s => s.name).join(', ')],
+    ['Дальність', `${m.range} км`], ['Швидкість', `${m.v} м/с`], ['Балістика', balText(m)], ['Розміри', `~${m.dim[0]} × ${m.dim[1]} м`], ['Ціна', `${m.cost} ⛁`], ['Примітка', m.note]]})),
+  ...Object.values(AAM).map(m => ({id: m.id, name: m.name, dim: MSL3[m.id], info: [['Тип', 'ракета «повітря-повітря»'], ['Носії', AIR.filter(a => a.aam.includes(m.id)).map(a => a.name).join(', ')],
+    ['Дальність', `${m.range} км`], ['Швидкість', `${m.v} м/с`], ['Захоплення', `${m.lock} с`], ['Розміри', `~${MSL3[m.id][0]} × ${MSL3[m.id][1]} м`], ['Ціна', `${m.cost} ⛁`], ['Примітка', m.note]]})),
+];
+const CX = {sam: ['ППО', SAM], air: ['Авіація', AIR], uav: ['БпЛА', UAV], enemy: ['Противник', Object.values(ENEMY)], msl: ['Ракети', null]};
+let cxTab = 'sam';
+const credit = d => { const g = modelOf(d)?.glb; return g ? [['3D-модель', `<a href="${g.url}" target="_blank" rel="noopener" style="color:var(--acc)">${g.name}</a> — ${g.author}, ${g.license}`]] : []; };
+function codex(tab) {
+  cxTab = tab;
+  $('cxTabs').innerHTML = Object.entries(CX).map(([k, [n]]) => `<button data-cx="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('')
+    + (G3 ? `<button id="cx3d" style="margin-left:auto">Вигляд: ${SET.cx3d ? '3D' : '2D'}</button>` : '');
+  $('cxTabs').querySelectorAll('[data-cx]').forEach(b => b.onclick = () => { AU.click(); codex(b.dataset.cx); });
+  if (G3) $('cx3d').onclick = () => { AU.click(); SET.cx3d = !SET.cx3d; saveSet(); codex(tab); if (G) renderCards(); };
+  const list = CX[tab][1] || MSL_LIST();
+  $('cxGrid').innerHTML = list.map((d, i) => `<div class="cx"><canvas width="220" height="220" data-i="${i}"></canvas><div><b>${d.name}</b><span class="note">${d.country ? d.country + ' · ' : ''}id: ${d.model || d.id}</span><table>${[...d.info, ...extraRows(d), ...credit(d)].map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table></div></div>`).join('');
+  $('cxGrid').querySelectorAll('canvas').forEach(cv => drawFit(cv, list[cv.dataset.i]));
+}
+codex('sam');
+
+// ================= ЕКРАН =================
+// G — стан бою (живе в sim.js, у мережевій грі приходитиме з сервера).
+// V — стан вигляду цього гравця: швидкість, вибраний юніт, журнал, вибухи на екрані.
+let V = null;
+// усі дії гравця йдуть сюди; у мережевій грі ця функція відправлятиме команду на сервер
+const cmd = c => command(c);
+function startOp() {
+  show(null);
+  G = newGame(SET.diff);
+  V = {speed: 30, lastSpeed: 30, paused: false, tab: 'sam', pending: null, cursor: null, sel: null, selMin: false, log: [], booms: [], parts: [], tracers: [], shake: 0, flash: 0};
+  $('hud').classList.remove('hidden'); $('sel').classList.add('hidden'); $('log').innerHTML = '';
+  document.querySelectorAll('#side [data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === 'sam'));
+  map.setMaxBounds(null);
+  map.flyToBounds(OBL, {duration: 2, paddingTopLeft: [10, 70], paddingBottomRight: [310, 10]});
+  map.once('moveend', () => { map.setMaxBounds(L.latLngBounds(OBL).pad(.7)); map.setMinZoom(Math.max(5, map.getZoom() - 1.5)); });
+  oblLayer.addTo(map);
+  setSpeed(30); renderCards();
+  logMsg('Розгорніть ППО: комплекс праворуч → клік по карті. Час іде в 30× від реального (1× — реальний).', 'warn');
+}
+function toMenu() {
+  G = null; V = null; $('hud').classList.add('hidden'); oblLayer.remove();
+  map.setMaxBounds(null); map.setMinZoom(5); map.flyToBounds(UKR, {duration: 1.5});
+  show('main');
+}
+function logMsg(text, cls = '') { if (!V) return; V.log.unshift({text, cls}); V.log.length = Math.min(V.log.length, 6); $('log').innerHTML = V.log.slice().reverse().map(l => `<div class="${l.cls}">${l.text}</div>`).join(''); }
+function burst(x, y, n, col, spd) {
+  for (let i = 0; i < n; i++) { const a = rnd(0, 7), s = rnd(.3, 1) * spd; V.parts.push({x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: 0, life: rnd(.5, 1.2), c: col, r: rnd(1, 2.5)}); }
+}
+// події від «судді» → журнал, звуки, вибухи, тряска
+function drainEvents() {
+  if (!G || !V) return;
+  for (const [type, a, b, c, d, e] of G.out) {
+    if (type === 'say') logMsg(a, b);
+    else if (type === 'snd') AU[a]?.();
+    else if (type === 'boom') V.booms.push({x: a, y: b, life: c, r: d, c: e, t: 0});
+    else if (type === 'burst') burst(a, b, c, d, e);
+    else if (type === 'tracer') V.tracers.push({x: a, y: b, tx: c, ty: d, t: 0});
+    else if (type === 'shake') { V.shake = Math.min(14, V.shake + a); V.flash = Math.min(.35, V.flash + b); }
+    else if (type === 'end') endScreen(a);
+  }
+  G.out.length = 0;
+}
+function endScreen(win) {
+  V.paused = true;
+  $('mTitle').textContent = win ? 'Операцію виконано' : 'Оборону прорвано';
+  $('mText').innerHTML = `Хвиль: ${G.wave}/${WAVES.length}<br>Збито: ${G.kills}<br>Влучань: ${G.leaks}<br>Витрачено: ${G.spent} ⛁<br>Стан Києва: ${Math.round(G.cities[0].hp / G.cities[0].max * 100)}%`;
+  $('modal').classList.remove('hidden');
+  if (win) AU.chime(); else AU.impact();
+}
+
+function setSpeed(s) { if (!G) return; V.speed = s; if (s) V.lastSpeed = s; document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('on', +b.dataset.speed === s)); }
+document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { AU.click(); setSpeed(+b.dataset.speed); });
+$('menuBtn').onclick = () => { AU.click(); V.paused = true; show('pause'); };
+$('startWave').onclick = () => { AU.click(); cmd({t: 'startWave'}); };
+const sideMin = v => { $('side').classList.toggle('min', v); $('sideMin').textContent = v ? '☰' : '✕'; };
+document.querySelectorAll('#side [data-tab]').forEach(b => b.onclick = () => {
+  AU.click();
+  const min = $('side').classList.contains('min');
+  if (!min && V.tab === b.dataset.tab) return sideMin(true); // повторний клік по вкладці — згорнути
+  sideMin(false); V.tab = b.dataset.tab; V.pending = null;
+  document.querySelectorAll('#side [data-tab]').forEach(x => x.classList.toggle('on', x === b)); renderCards();
+});
+$('sideMin').onclick = () => { AU.click(); sideMin(!$('side').classList.contains('min')); };
+// панель вибраного юніта: перетягування за заголовок
+(() => {
+  const el = $('sel'); let drag = null;
+  el.addEventListener('pointerdown', e => {
+    if (!e.target.closest('h3') || e.target.closest('button')) return;
+    const r = el.getBoundingClientRect(); drag = {dx: e.clientX - r.left, dy: e.clientY - r.top}; el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove', e => {
+    if (!drag) return;
+    el.style.left = Math.max(0, Math.min(innerWidth - 80, e.clientX - drag.dx)) + 'px'; el.style.top = Math.max(0, Math.min(innerHeight - 40, e.clientY - drag.dy)) + 'px';
+    el.style.right = el.style.bottom = 'auto';
+  });
+  el.addEventListener('pointerup', () => { drag = null; });
+})();
+addEventListener('keydown', e => {
+  if (e.code === 'Escape' && menuScreen && menuScreen !== 'main' && menuScreen !== 'pause') { show(menuScreen === 'settings' ? returnTo : G ? 'pause' : 'main'); return; }
+  if (!G) return;
+  if (e.code === 'Space' && !G.over && !menuScreen) { e.preventDefault(); setSpeed(V.speed ? 0 : V.lastSpeed); return; }
+  if (e.code !== 'Escape') return;
+  if (V.pending) { V.pending = null; updateCards(); return; }
+  if (V.sel) { select(null); return; }
+  if (!$('modal').classList.contains('hidden')) return;
+  V.paused = !V.paused; show(V.paused ? 'pause' : null);
+});
+
+// ================= CARDS (права панель) =================
+const ROLE = {fighter: 'винищувач', hunter: 'мисливець на дрони', strike: 'ударний', recon: 'розвідка', interceptor: 'перехоплювач', kamikaze: 'удар по пускових'};
+const defs = () => V.tab === 'sam' ? SAM : V.tab === 'air' ? AIR : UAV;
+const owned = d => G.air.filter(a => a.d === d);
+function renderCards() {
+  $('cards').innerHTML = defs().map(d => `<div class="card" data-id="${d.id}"><canvas width="80" height="80" style="width:40px;height:40px"></canvas><div><b>${d.name}</b><small>${
+    V.tab === 'sam' ? `до ${samRange(d)} км · ${d.bm ? 'ППО+ПРО' : 'ППО'}` : ROLE[d.role] + (d.msl ? ` · до ${d.msl} ракет` : '')
+  }</small></div><span class="badge"></span></div>`).join('');
+  $('cards').querySelectorAll('.card').forEach(el => {
+    const d = defs().find(x => x.id === el.dataset.id);
+    drawFit(el.querySelector('canvas'), d);
+    el.onclick = () => cardClick(d);
+  });
+  updateCards();
+}
+function updateCards() {
+  $('cards').querySelectorAll('.card').forEach(el => {
+    const d = defs().find(x => x.id === el.dataset.id);
+    if (!d) return;
+    let badge = `${d.cost} ⛁`, on = G.res >= d.cost;
+    if (V.tab === 'air') {
+      const own = owned(d), idle = own.filter(a => a.state === 'base').length;
+      badge = `${own.length}/${d.count}<br>${idle ? `на базі: ${idle}` : own.length < d.count ? `${d.cost} ⛁` : '—'}`;
+      on = idle > 0 || (own.length < d.count && G.res >= d.cost);
+    }
+    el.querySelector('.badge').innerHTML = badge;
+    el.classList.toggle('off', !on);
+    el.classList.toggle('sel', V.pending?.d === d);
+  });
+  const p = V.pending;
+  $('hint').textContent = p ? `Клік по карті — ${p.kind === 'sam' ? 'розгорнути' : 'запустити'} ${p.d.name}. Esc — скасувати.`
+    : 'Клік по своєму юніту — вибір. Клік по цілі — що це. Пробіл — пауза.';
+}
+function cardClick(d) {
+  AU.click();
+  if (V.tab === 'air') {
+    const idle = owned(d).find(a => a.state === 'base');
+    if (idle) { select(idle); return; }
+    const a = cmd({t: 'buyAir', def: d.id}); if (a) select(a);
+    return;
+  }
+  if (d.role === 'kamikaze') { cmd({t: 'kamikaze', def: d.id}); return; }
+  if (G.res < d.cost) { logMsg(`Бракує ресурсу (потрібно ${d.cost} ⛁).`, 'bad'); return; }
+  const next = V.pending?.d === d ? null : {kind: V.tab, d};
+  select(null); // select() скидає pending, тому ставимо його після
+  V.pending = next; updateCards();
+}
+
+// ================= ВИБІР І НАКАЗИ =================
+function pickAt(cp, onlyEnemy) {
+  let best = null, bd = 16;
+  const test = (o, type) => { const p = P(o.x, o.y), d = Math.hypot(p.x - cp.x, p.y - cp.y); if (d < bd) { bd = d; best = {o, type}; } };
+  G.enemies.forEach(e => e.det && test(e, 'enemy'));
+  if (onlyEnemy) return best;
+  G.sams.forEach(s => test(s, 'unit'));
+  G.air.forEach(a => a.state !== 'base' && a.state !== 'service' && test(a, 'unit'));
+  G.uavs.forEach(u => u.state !== 'strike' && test(u, 'unit'));
+  return best;
+}
+const myUnit = u => u && u.kind !== 'enemy';
+function select(u) { V.sel = u; V.pending = null; renderSel(); updateCards(); }
+map.on('mousemove', e => { if (V) V.cursor = toXY(e.latlng.lat, e.latlng.lng); });
+map.on('click', e => {
+  if (!G || G.over) return;
+  const pt = toXY(e.latlng.lat, e.latlng.lng);
+  if (V.pending) {
+    const {kind, d} = V.pending, u = cmd({t: 'place', kind, def: d.id, ...pt});
+    if (kind === 'sam' && u) { AU.click(); select(u); return; }
+    if (G.res < d.cost) V.pending = null;
+    updateCards(); return;
+  }
+  const hit = pickAt(e.containerPoint, false), en = pickAt(e.containerPoint, true);
+  if (myUnit(V.sel) && en) { cmd({t: 'assign', unit: V.sel.id, target: en.o.id}); AU.click(); return; }
+  if (hit) { select(hit.o); AU.click(); return; }
+  const u = V.sel;
+  if (u && ((u.kind === 'air' && u.d.role !== 'strike') || (u.kind === 'uav' && u.d.role !== 'kamikaze'))) { cmd({t: 'move', unit: u.id, ...pt}); AU.click(); }
+  else select(null);
+});
+
+// ================= ПАНЕЛЬ ВИБРАНОГО ЮНІТА / ЦІЛІ =================
+const STATE = {base: 'на базі', service: 'дозаправка й дозарядка', move: 'в польоті', patrol: 'патрулювання', intercept: 'перехоплення', rtb: 'повертається на базу', strikeOut: 'летить на удар'};
+const chips = (u, kinds) => `<div class="btns">${kinds.map(k => `<button class="chip ${u.filt[k] ? 'on' : ''}" data-act="f:${k}">${KIND[k]}</button>`).join('')}</div>`;
+const bar = (k, col = 'var(--acc)') => `<div class="bar"><i style="width:${Math.max(0, Math.min(1, k)) * 100}%;background:${col}"></i></div>`;
+function alive(u) { return u && (u.kind === 'sam' ? G.sams : u.kind === 'air' ? G.air : u.kind === 'enemy' ? G.enemies : G.uavs).includes(u); }
+const selBtns = () => `<span style="display:flex;gap:4px"><button data-act="min" title="Згорнути / розгорнути">${V.selMin ? '▴' : '▾'}</button><button data-act="close" title="Закрити">✕</button></span>`;
+function renderSel() {
+  const u = V?.sel, el = $('sel');
+  if (!G || !alive(u) || (u.kind === 'enemy' && !u.det)) { if (V) V.sel = null; el.classList.add('hidden'); return; }
+  el.classList.remove('hidden'); el.classList.toggle('enemy', u.kind === 'enemy');
+  const d = u.d;
+  let h;
+  if (u.kind === 'enemy') {
+    const kyiv = G.cities[0], v = u.v * 3600, eta = dist(u, u.wps.at(-1) || u) / u.v;
+    h = `<h3>${u.ident ? u.def.name : PRELIM(u)}${selBtns()}</h3>`;
+    if (V.selMin) { el.innerHTML = h; return; }
+    h += u.ident ? `<div style="color:var(--ok)">Ідентифіковано</div>` : `<div class="k">Не ідентифіковано: підведіть розвідника, літак або перехоплювач ближче ніж на 15 км (ППО — 8 км).</div>`;
+    h += `<table><tr><td>Швидкість</td><td>${Math.round(v)} км/год</td></tr><tr><td>Висота</td><td>${u.alt >= 1 ? u.alt.toFixed(1) + ' км' : Math.round(u.alt * 1000) + ' м'}</td></tr>
+      <tr><td>До Києва</td><td>${Math.round(dist(u, kyiv))} км</td></tr>
+      ${u.def.recon && u.ident ? '<tr><td>Мета</td><td>розвідка ваших ППО</td></tr>' : u.city && u.ident ? `<tr><td>Ймовірна ціль</td><td>${u.city.name}, ~${Math.max(1, Math.round(eta / 60))} хв</td></tr>` : ''}
+      ${u.samT ? `<tr><td>Ціль</td><td style="color:var(--bad)">позиція ${u.samT.d.name}</td></tr>` : ''}
+      ${u.ident ? u.def.info.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('') : ''}</table>`;
+    h += `<div class="k" style="margin-top:6px">Щоб призначити ціль: виберіть свій юніт, потім клікніть по цілі.</div>`;
+    el.innerHTML = h; return;
+  }
+  h = `<h3>${d.name}${selBtns()}</h3>`;
+  if (V.selMin) { el.innerHTML = h; return; }
+  if (u.kind === 'sam') {
+    h += `<div><span class="k">ПУ</span> ${used(u.load, SAM_MSL)}/${d.cap} місць · <span class="k">резерв</span> ${used(u.stock, SAM_MSL)}/${d.cap * 2} · <span class="k">реакція</span> ${d.react} с</div>`;
+    h += u.reload > 0 ? `<div class="k">Перезаряджання з резерву…</div>${bar(1 - u.reload / d.reload, 'var(--warn)')}` : '';
+    if (u.lock) h += `<div class="k">Захоплення цілі: ${label(u.lock.e)}</div>${bar(1 - u.lock.t / u.lock.t0, 'var(--warn)')}`;
+    h += `<div class="k" style="margin-top:4px">Ракети (клік по рядку — тип для автозакупівлі):</div>`;
+    for (const mid of d.msl) {
+      const m = SAM_MSL[mid];
+      h += `<div class="mrow ${u.buyType === mid ? 'pick' : ''}" data-act="pick:${mid}"><div><b>${m.name}</b><small>${m.range} км · ${m.v} м/с${d.bm ? ` · балістика: <span style="color:${m.bm ? 'var(--ok)' : 'var(--bad)'}">${balText(m)}</span>` : ''} · ${m.cost} ⛁ · на ПУ ${u.load[mid] || 0}, резерв ${u.stock[mid] || 0}</small></div>
+        <button data-act="b1:${mid}">+1</button><button data-act="bf:${mid}">+повна</button></div>`;
+    }
+    h += `<div class="btns"><button class="chip ${u.auto ? 'on' : ''}" data-act="auto">Автозакупівля</button></div>`;
+    h += `<div class="k">Що збивати автоматично (впізнані імітатори пропускає):</div>${chips(u, d.bm ? ['drone', 'cruise', 'bal'] : ['drone', 'cruise'])}`;
+    h += `<div><span class="k">Пріоритет:</span> ${u.force && !u.force.dead ? `${label(u.force)} <button data-act="unforce">Скинути</button>` : 'авто (клік по цілі — призначити)'}</div>`;
+    h += `<div class="btns"><button data-act="sell">Демонтувати (+${Math.round(d.cost / 2)} ⛁)</button></div>`;
+  } else if (u.kind === 'air') {
+    const atBase = u.state === 'base', mf = maxFuel(u);
+    h += `<div><span class="k">Стан:</span> ${STATE[u.state]} · <span class="k">крейс.</span> ${d.cruise} км/год, <span class="k">перехоплення</span> ${d.dash} км/год</div>`;
+    h += `<div class="k">Паливо ~${Math.round(u.fuel / 60)} хв з ${Math.round(mf / 60)}</div>${bar(u.fuel / mf, u.fuel / mf < .25 ? 'var(--bad)' : 'var(--ok)')}`;
+    if (u.state === 'service') h += `<div class="k">Обслуговування</div>${bar(1 - u.svc / 900, 'var(--warn)')}`;
+    if (u.lock) h += `<div class="k">Захоплення: ${label(u.lock.e)}</div>${bar(1 - u.lock.t / u.lock.t0, 'var(--warn)')}`;
+    if (u.aimT > 0 && u.tgt) h += `<div class="k">Прицілювання гарматою…</div>${bar(Math.min(1, u.aimT / 4), 'var(--warn)')}`;
+    if (d.ptb) h += `<div class="mrow"><div><b>Підвісні баки (ПТБ)</b><small>${u.ptb}/${d.ptb} · +${d.ptbK * 100}% палива кожен, −${d.ptbSlot} ракети</small></div>
+      <button data-act="ptb-" ${atBase && u.ptb ? '' : 'disabled'}>−</button><button data-act="ptb+" ${atBase && u.ptb < d.ptb && sum(u.load) <= maxMsl(u) - d.ptbSlot ? '' : 'disabled'}>+</button></div>`;
+    if (d.aam.length) {
+      h += `<div class="k" style="margin-top:4px">Ракети ${sum(u.load)}/${maxMsl(u)}${atBase ? '' : ' (купівля — тільки на базі)'}:</div>`;
+      for (const mid of d.aam) {
+        const m = AAM[mid];
+        h += `<div class="mrow"><div><b>${m.name}</b><small>${m.note} · захоплення ${m.lock} с · ${m.cost} ⛁ · на борту ${u.load[mid] || 0}</small></div>
+          <button data-act="a-:${mid}" ${atBase && u.load[mid] ? '' : 'disabled'}>−</button><button data-act="a+:${mid}" ${atBase && sum(u.load) < maxMsl(u) ? '' : 'disabled'}>+</button></div>`;
+      }
+    }
+    if (d.gun) h += `<div class="mrow"><div><b>${d.gun.name}</b><small>${d.gun.rounds} снарядів · черг ${u.gun}/${d.gun.bursts}${u.gun ? '' : ' · <span style="color:var(--bad)">не куплено</span>'}</small></div><button data-act="gun" ${atBase && u.gun < d.gun.bursts ? '' : 'disabled'}>Купити БК (${GUN_COST} ⛁)</button></div>`;
+    if (d.role === 'strike') {
+      h += `<div class="btns"><button data-act="strike" ${atBase ? '' : 'disabled'}>Удар по пускових</button></div>`;
+    } else {
+      h += `<div class="k">Автоматично збивати:</div>${chips(u, ['drone', 'cruise'])}`;
+      if (d.gun) h += `<div class="btns"><button class="chip ${u.gunMode ? 'on' : ''}" data-act="gm">Полювати на дрони гарматою</button></div>`;
+      h += `<div class="k">Клік по карті — летіти туди. Клік по цілі — перехопити.</div>`;
+    }
+    h += `<div class="btns"><button data-act="rtb" ${['base', 'service', 'rtb'].includes(u.state) ? 'disabled' : ''}>На базу</button></div>`;
+  } else {
+    const k = d.role === 'recon' ? u.fuel / (d.endur * 3600) : u.fuel / d.range;
+    h += `<div class="k">${ROLE[d.role]} · ${d.vmax} км/год · ${d.role === 'recon' ? 'ресурс польоту' : 'заряд батареї'}</div>${bar(k, 'var(--ok)')}`;
+    if (d.role === 'interceptor') h += `<div><span class="k">Ціль:</span> ${u.tgt && !u.tgt.dead ? label(u.tgt) : 'чергування (бачить дрони в радіусі 10 км від точки)'}</div>`;
+    h += `<div class="k">${d.role === 'recon' ? 'Клік по карті — перелетіти.' : 'Клік по цілі — атакувати. Клік по карті — точка чергування.'}</div>`;
+  }
+  el.innerHTML = h;
+}
+$('sel').addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const u = V.sel, [act, arg] = b.dataset.act.split(':'); AU.click();
+  if (act === 'close') return select(null);
+  if (act === 'min') { V.selMin = !V.selMin; return renderSel(); }
+  cmd({t: 'act', unit: u.id, act, arg});
+  if (act === 'sell') return select(null);
+  renderSel();
+});
+
+// ================= RENDER =================
+function circle(x, y, rKm, stroke, fill, dash) {
+  const p = P(x, y), r = rKm * kmPx();
+  g.beginPath(); g.arc(p.x, p.y, r, 0, 7);
+  if (fill) { g.fillStyle = fill; g.fill(); }
+  if (stroke) { g.setLineDash(dash || []); g.strokeStyle = stroke; g.stroke(); g.setLineDash([]); }
+}
+function unit(o, d, edge, px, text, color, airborne) {
+  const p = P(o.x, o.y), m = modelOf(d), t = performance.now() / 1000;
+  const off = airborne ? Math.min(10, 3 + (o.alt || 1) * 2) : 1.5;
+  const rr = o.rot || 0; if (o.vr == null) o.vr = rr; // візуальний поворот без ривків (напр. ПУ на ціль)
+  o.vr += Math.max(-.12, Math.min(.12, ((rr - o.vr + Math.PI * 3) % (Math.PI * 2)) - Math.PI));
+  const cat = o.kind === 'sam' ? 'sam' : o.kind === 'air' ? (o.d.heli ? 'heli' : 'air') : o.kind === 'uav' ? 'uav' : 'enemy';
+  if (G3 && SET['v3_' + cat]) {
+    const bank = o.kind === 'air' ? (o.d.heli ? .3 : 1) : o.kind === 'enemy' ? (o.def.kind === 'bal' ? 0 : o.def.kind === 'cruise' ? .4 : .5) : o.kind === 'uav' ? .5 : 0;
+    G3.place(o, m, px * 1.15, off, bank, t);
+    g.globalAlpha = .55; g.strokeStyle = edge; g.beginPath(); g.arc(p.x, p.y, px * .62, 0, 7); g.stroke(); g.globalAlpha = 1; // маркер «свій/чужий»
+  } else {
+    if (SET.shadows) { g.save(); g.translate(p.x + off, p.y + off * 1.3); g.rotate(o.vr); drawShadow(g, m, px); g.restore(); }
+    g.save(); g.translate(p.x, p.y); g.rotate(o.vr); drawModel(g, m, px, {t, edge}); g.restore();
+  }
+  if (text && SET.labels) { g.font = '11px system-ui'; g.textAlign = 'left'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.65)'; g.strokeText(text, p.x + px / 2 + 3, p.y - 3); g.fillStyle = color || edge; g.fillText(text, p.x + px / 2 + 3, p.y - 3); g.lineWidth = 1; }
+}
+function lockArc(e, k) { const p = P(e.x, e.y); g.strokeStyle = '#ffb347'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, 15, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); g.stroke(); g.lineWidth = 1; }
+function draw(rdt) { G3?.begin(); drawScene(rdt); G3?.end(); }
+function drawScene(rdt) {
+  const dpr = devicePixelRatio || 1;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, innerWidth, innerHeight);
+  if (!G) return;
+  const t = performance.now() / 1000;
+  if (V.shake > .2 && SET.shake) g.translate(rnd(-V.shake, V.shake), rnd(-V.shake, V.shake));
+  g.lineWidth = 1;
+  if (SET.ranges) {
+    for (const s of G.sams) {
+      const r = samMaxRange(s);
+      if (r) circle(s.x, s.y, r, s === V.sel ? 'rgba(255,179,71,.95)' : 'rgba(79,209,224,.9)', 'rgba(79,209,224,.08)', [8, 4]);
+      else circle(s.x, s.y, samRange(s.d), 'rgba(255,90,90,.6)', null, [2, 6]);
+    }
+    for (const u of G.uavs) {
+      if (u.d.role === 'recon') circle(u.x, u.y, u.d.sensor, 'rgba(94,224,138,.6)', null, [4, 4]);
+      if (u.d.role === 'interceptor') circle(u.hx, u.hy, 10, 'rgba(94,224,138,.35)', null, [2, 5]);
+    }
+    for (const a of G.air) if (['patrol', 'move', 'intercept'].includes(a.state) && a.d.radar > 10) circle(a.x, a.y, a.d.radar, 'rgba(79,209,224,.3)', null, [2, 6]);
+  }
+  if (SET.routes) { // типові коридори прольоту (наближено)
+    g.setLineDash([10, 7]); g.strokeStyle = 'rgba(255,80,60,.75)'; g.lineWidth = 2.5;
+    for (const r of Object.values(ROUTES)) {
+      g.beginPath(); r.pts.forEach(([la, ln], i) => { const q = map.latLngToContainerPoint([la, ln]); i ? g.lineTo(q.x, q.y) : g.moveTo(q.x, q.y); });
+      const k = P(0, 0); g.lineTo(k.x, k.y); g.stroke();
+    }
+    g.setLineDash([]); g.lineWidth = 1;
+  }
+  if (V.pending?.kind === 'sam' && V.cursor) circle(V.cursor.x, V.cursor.y, samRange(V.pending.d), '#ffb347', 'rgba(255,179,71,.08)', [6, 4]);
+  const b = P(BASE.x, BASE.y), atBase = G.air.filter(a => a.state === 'base' || a.state === 'service').length;
+  g.strokeStyle = '#4fd1e0'; g.lineWidth = 3; g.beginPath(); g.moveTo(b.x - 10, b.y + 6); g.lineTo(b.x + 10, b.y - 6); g.stroke(); g.lineWidth = 1;
+  g.fillStyle = '#4fd1e0'; g.font = '11px system-ui'; g.textAlign = 'center'; g.fillText(`✈ Васильків${atBase ? ` (${atBase})` : ''}`, b.x, b.y + 18);
+  for (const c of G.cities) {
+    const p = P(c.x, c.y), k = c.hp / c.max, s = c.w > 1 ? 9 : 6;
+    if (k < 1 && Math.random() < (1 - k) * rdt * 20) V.parts.push({x: c.x + rnd(-2, 2), y: c.y + rnd(-2, 2), vx: rnd(-.2, .2), vy: rnd(.6, 1.2), t: 0, life: rnd(2, 4), c: '#555', r: rnd(4, 9), smoke: true});
+    g.fillStyle = c.hp <= 0 ? '#555' : k > .6 ? '#5ee08a' : k > .3 ? '#ffb347' : '#ff5a5a';
+    g.fillRect(p.x - s / 2, p.y - s / 2, s, s); g.strokeStyle = '#000'; g.strokeRect(p.x - s / 2, p.y - s / 2, s, s);
+    g.font = (c.w > 1 ? 'bold 13px' : '11px') + ' system-ui'; g.textAlign = 'center';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.7)'; g.strokeText(c.name, p.x, p.y - s); g.fillText(c.name, p.x, p.y - s); g.lineWidth = 1;
+    g.fillStyle = '#311'; g.fillRect(p.x - 18, p.y + s, 36, 3); g.fillStyle = '#5ee08a'; g.fillRect(p.x - 18, p.y + s, 36 * k, 3);
+  }
+  for (const s of G.sams) {
+    const st = used(s.stock, SAM_MSL), empty = !used(s.load, SAM_MSL) && !st;
+    unit(s, s.d, empty ? '#ff5a5a' : s.reload > 0 ? '#7fa3ab' : '#4fd1e0', 28, `${s.d.name.replace(' ★', '')} ${s.reload > 0 ? '⟳' : sum(s.load)}${st ? '+' + sum(s.stock) : ''}`);
+    if (s.lock) lockArc(s.lock.e, 1 - s.lock.t / s.lock.t0);
+  }
+  for (const e of G.enemies) {
+    if (!e.det) continue;
+    const col = e.def.kind === 'bal' ? '#ff3b3b' : e.def.kind === 'cruise' ? '#ff6b5a' : e.ident && e.def.recon ? '#e58cff' : e.ident && e.def.decoy ? '#c9c19a' : '#ffb347';
+    unit(e, e.def, col, modelPx(e.def), `${label(e)} ${Math.round(e.v * 3600)}`, col, true);
+    const p = P(e.x, e.y);
+    if (e.def.kind === 'bal') { g.strokeStyle = col; g.beginPath(); g.arc(p.x, p.y, 14 + Math.sin(t * 10) * 3, 0, 7); g.stroke(); }
+    if (e.samT) { const q = P(e.samT.x, e.samT.y); g.strokeStyle = 'rgba(255,60,60,.5)'; g.setLineDash([3, 5]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); }
+  }
+  for (const a of G.air) if (!['base', 'service'].includes(a.state)) {
+    unit(a, a.d, '#bdf3ff', modelPx(a.d), `${a.d.name} ${sum(a.load)}р${a.d.gun ? ' ' + a.gun + 'ч' : ''}`, '#bdf3ff', true);
+    if (a.lock) lockArc(a.lock.e, 1 - a.lock.t / a.lock.t0);
+    if (a.tgt && a.aimT > 0) lockArc(a.tgt, Math.min(1, a.aimT / 4));
+  }
+  for (const u of G.uavs) unit(u, u.d, '#5ee08a', Math.max(14, modelPx(u.d)), u.d.name, '#5ee08a', true);
+  const sel = V.sel;
+  if (sel && alive(sel) && !['base', 'service'].includes(sel.state)) {
+    const p = P(sel.x, sel.y); g.strokeStyle = sel.kind === 'enemy' ? '#ff5a5a' : '#ffb347'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, 22, 0, 7); g.stroke(); g.lineWidth = 1;
+    const tg = sel.force || sel.tgt;
+    if (tg && !tg.dead && sel.kind !== 'enemy') { const q = P(tg.x, tg.y); g.strokeStyle = '#ffb347'; g.setLineDash([6, 4]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); g.beginPath(); g.arc(q.x, q.y, 12, 0, 7); g.stroke(); }
+    else if (sel.kind === 'air' && sel.state === 'move') { const q = P(sel.tx, sel.ty); g.strokeStyle = 'rgba(255,179,71,.6)'; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); }
+  }
+  for (const s of G.shots) {
+    g.strokeStyle = 'rgba(230,240,250,.7)'; g.lineWidth = 2; g.beginPath();
+    for (let i = 0; i < s.trail.length; i += 2) { const p = P(s.trail[i], s.trail[i + 1]); i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y); }
+    const p = P(s.x, s.y); g.lineTo(p.x, p.y); g.stroke(); g.lineWidth = 1;
+    g.fillStyle = '#ffd27a'; g.beginPath(); g.arc(p.x, p.y, 2.5, 0, 7); g.fill();
+  }
+  for (const tr of V.tracers) { const p = P(tr.x, tr.y), q = P(tr.tx, tr.ty); g.globalAlpha = 1 - tr.t / .3; g.strokeStyle = '#ffec8a'; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); }
+  g.globalAlpha = 1;
+  for (const pt of V.parts) {
+    const p = P(pt.x, pt.y), k = pt.t / pt.life;
+    g.globalAlpha = (pt.smoke ? .35 : 1) * (1 - k); g.fillStyle = pt.c;
+    g.beginPath(); g.arc(p.x, p.y, pt.r * (pt.smoke ? 1 + k * 2 : 1), 0, 7); g.fill();
+  }
+  g.globalAlpha = 1;
+  for (const bm of V.booms) {
+    const p = P(bm.x, bm.y), k = bm.t / bm.life;
+    g.globalAlpha = 1 - k; g.fillStyle = bm.c; g.beginPath(); g.arc(p.x, p.y, bm.r * (.4 + k), 0, 7); g.fill();
+    g.strokeStyle = bm.c; g.beginPath(); g.arc(p.x, p.y, bm.r * (.6 + k * 2.5), 0, 7); g.stroke(); g.globalAlpha = 1;
+  }
+  if (V.flash > .01) { g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = `rgba(255,40,20,${V.flash})`; g.fillRect(0, 0, innerWidth, innerHeight); }
+}
+function hud() {
+  if (!G) return;
+  const kyiv = G.cities[0], h = Math.floor(1.5 + G.time / 3600) % 24, m = Math.floor(G.time / 60) % 60;
+  const visible = G.enemies.filter(e => e.det).length;
+  $('top').innerHTML = `<b>Оборона Києва</b> <span class="k">· ${DIFF[G.diff].name}</span>
+    <span><span class="k">Хвиля</span> ${G.wave}/${WAVES.length}${G.phase === 'deploy' ? ' · підготовка' : ''}</span>
+    <span><span class="k">Час</span> ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} <span class="k">(${V.speed ? V.speed + '×' : 'пауза'})</span></span>
+    <span><span class="k">Ресурс</span> <b>${G.res} ⛁</b></span>
+    <span><span class="k">Київ</span> <span class="hp"><i style="width:${kyiv.hp / kyiv.max * 100}%"></i></span></span>
+    <span><span class="k">На радарі</span> ${visible}${G.enemies.length > visible ? ` <span class="k">(+${G.enemies.length - visible} поза зоною)</span>` : ''}</span>
+    <span><span class="k">Збито</span> ${G.kills} <span class="k">Влучань</span> ${G.leaks}</span>
+    ${G.nextMult < 1 ? `<span style="color:var(--ok)">Наступна хвиля −${Math.round((1 - G.nextMult) * 100)}%</span>` : ''}`;
+  $('startWave').classList.toggle('hidden', G.phase !== 'deploy' || G.wave >= WAVES.length);
+  $('startWave').textContent = `▶ Почати хвилю ${G.wave + 1}`;
+  updateCards();
+  if (!$('sel').matches(':hover')) renderSel();
+}
+setInterval(hud, 250);
+
+let last = performance.now();
+function frame(now) {
+  const rdt = Math.min(.05, (now - last) / 1000); last = now;
+  if (G && !V.paused && !G.over && V.speed) tick(rdt * V.speed); // у мережевій грі крок робитиме сервер
+  if (G) {
+    drainEvents();
+    for (const b of V.booms) b.t += rdt;
+    for (const tr of V.tracers) tr.t += rdt;
+    for (const p of V.parts) { p.t += rdt; p.x += p.vx * rdt; p.y += p.vy * rdt; }
+    V.booms = V.booms.filter(b => b.t < b.life); V.parts = V.parts.filter(p => p.t < p.life); V.tracers = V.tracers.filter(t => t.t < .3);
+    V.shake *= Math.pow(.02, rdt); V.flash *= Math.pow(.05, rdt);
+  }
+  draw(rdt); requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+show('main');
+</script>
+</body>
+</html>
