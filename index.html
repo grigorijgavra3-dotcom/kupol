@@ -34,6 +34,7 @@ button.on{border-color:var(--acc);color:var(--acc)}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
 .row input[type=range]{width:180px}
 #codex.screen{width:min(1150px,94vw);margin:0 auto}
+#settings.screen{width:min(560px,92vw)}
 .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
 .cx{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;gap:10px;background:#0e1a1e}
@@ -83,6 +84,15 @@ button.on{border-color:var(--acc);color:var(--acc)}
 .bar{height:5px;background:#222;border-radius:3px;overflow:hidden;margin:2px 0 4px}.bar i{display:block;height:100%;background:var(--acc)}
 #modal{position:absolute;inset:0;z-index:1100;background:#000a;display:flex;align-items:center;justify-content:center}
 #modal .screen{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:24px 28px;width:min(420px,90vw)}
+.mrow img.mi{flex:none;width:34px;height:34px;border-radius:4px;background:radial-gradient(#33402f,#1d2620)}
+#balwarn{position:absolute;left:50%;top:104px;transform:translateX(-50%);z-index:1050;width:min(460px,92vw);background:#2a1010;border:2px solid var(--bad);border-radius:10px;padding:12px 16px;box-shadow:0 8px 30px #000c;animation:blink 1s infinite alternate}
+#balwarn h3{margin:0 0 6px;color:#ff8a8a;font-size:16px}#balwarn button{margin-top:8px;width:100%;border-color:var(--bad)}
+#danger{position:absolute;left:50%;top:58px;transform:translateX(-50%);z-index:950;background:#5a0d0d;border:1px solid var(--bad);color:#fff;font-weight:700;border-radius:8px;padding:6px 16px;pointer-events:none;letter-spacing:.03em}
+@keyframes blink{from{box-shadow:0 0 0 #f00}to{box-shadow:0 0 28px #f00a}}
+#advBox table{width:100%;border-collapse:collapse;font-size:12px}#advBox td,#advBox th{padding:2px 4px;border-top:1px solid var(--line);text-align:left}
+#advBox th{color:var(--dim);font-weight:400}#advBox input[type=number]{width:52px;background:#0e1a1e;color:var(--txt);border:1px solid var(--line);border-radius:4px;padding:1px 3px}
+#advBox h4{margin:12px 0 4px;color:var(--acc)}
+.sites button{display:block;width:100%;text-align:left;margin:3px 0}
 </style>
 </head>
 <body>
@@ -130,6 +140,10 @@ button.on{border-color:var(--acc);color:var(--acc)}
     <div class="row"><span>Показувати типові маршрути дронів</span><input type="checkbox" data-set="routes"></div>
     <div class="row"><span>Тіні під технікою</span><input type="checkbox" data-set="shadows"></div>
     <div class="row"><span>Тряска екрана</span><input type="checkbox" data-set="shake"></div>
+    <div class="row"><span>Голосові оповіщення (як у застосунку «Повітряна тривога»)</span><input type="checkbox" data-set="voice"></div>
+    <div class="row"><span>Тривоги по районах на карті</span><input type="checkbox" data-set="alerts"></div>
+    <button id="advT" style="width:100%;margin-top:10px">Розширені налаштування ▸</button>
+    <div id="advBox" class="hidden"></div>
   </div>
   <div class="screen hidden" id="codex">
     <h2>Довідник техніки <button class="x" data-go="main" title="Закрити">✕</button></h2>
@@ -156,6 +170,7 @@ button.on{border-color:var(--acc);color:var(--acc)}
     <div id="hint"></div>
   </div>
   <div id="log"></div>
+  <div id="danger" class="hidden"></div>
   <div id="sel" class="hidden"></div>
   <div id="bottom">
     <button id="menuBtn" title="Меню (Esc)">☰</button>
@@ -165,6 +180,7 @@ button.on{border-color:var(--acc);color:var(--acc)}
   </div>
 </div>
 
+<div id="balwarn" class="hidden"></div>
 <div id="modal" class="hidden"><div class="screen"><h2 id="mTitle"></h2><div id="mText" class="note" style="font-size:14px"></div><div class="vlist"><button id="mAgain">Ще раз</button><button id="mMenu">Головне меню</button></div></div></div>
 
 <script src="sim.js"></script>
@@ -228,6 +244,17 @@ const MODELS = {
  s125:{L:6.2,S:5,paint:'#5c6845',out:[[0,1.5],[2.5,1.5],[2.5,4.5],[0,4.5]],det:[['tubes',4,1.6,0,6.2]]},
  crotale:{L:6.6,S:2.6,paint:'#6f7356',out:[[0,0],[1.1,0],[1.3,.5],[1.3,6.6],[0,6.6]],det:[['circ',0,3.8,1.1],['tubes',2,1.25,2.6,5.4]]},
  aspide:{L:7,S:2.4,paint:'#666b52',out:[[0,1],[1.2,1],[1.2,7],[0,7]],det:[['line',0,0,0,1],['tubes',4,1,1.8,6.6]]},
+ sampt:{L:11,S:2.55,paint:'#6a6d55',out:[[0,0],[1.1,0],[1.27,.3],[1.27,11],[0,11]],det:[['cab',0,2.6],['tubes',8,1.15,3,10.8]]},
+ gepard:{L:7.68,S:3.3,paint:'#5e6748',camo:['#454e33','#7a7550','#2f3424'],out:[[0,0],[1.4,0],[1.64,.6],[1.64,7.68],[0,7.68]],det:[['tracks',1.37,.3,7.5,.5],['circ',0,3.9,1.2],['line',1.45,.6,1.45,3.6]]},
+ mvg:{L:5.3,S:1.85,paint:'#6b6f5a',out:[[0,0],[.82,0],[.92,.35],[.92,5.3],[0,5.3]],det:[['cab',.3,2.4],['circ',0,3.9,.35],['line',0,3.9,0,2.6]]},
+ yak52:{L:7.75,S:9.3,paint:'#c9c7bd',camo:['#d4c35a','#3a6ea5'],out:[[0,0],[.35,.25],[.5,.9],[.55,2.1],[4.65,2.5],[4.65,3.5],[.55,3.6],[.3,6.5],[1.5,6.8],[1.5,7.4],[.2,7.4],[0,7.75]],det:[['canopy',3,.35,1.1],['fin',0,6.4,7.7],['prop',.05,1.2]]},
+ asc890:{L:19.73,S:21.44,paint:'#9aa0a6',out:[[0,0],[.6,.6],[1.1,2],[1.15,7.2],[10.72,8.2],[10.72,9.4],[1.15,9.6],[1,15],[.5,17.5],[4,18.4],[4,19.3],[.4,19.3],[0,19.73]],det:[['canopy',1.6,.6,.5],['eng',3.4,6.2,10.5,.9],['eng',0,7.5,14.5,.45],['fin',0,16.5,19.6]]},
+ shark:{L:1.95,S:3.4,paint:'#6e7564',out:[[0,0],[.12,.15],[.15,.5],[1.7,.65],[1.7,.9],[.15,.95],[.1,1.6],[.5,1.75],[.5,1.9],[0,1.95]],det:[['prop',1.95,.2]]},
+ sting:{L:.35,S:.35,paint:'#1f2226',quad:true},
+ pysyun:{L:.65,S:.5,paint:'#4b5d6a',out:[[0,0],[.06,.05],[.09,.15],[.09,.45],[.25,.5],[.25,.58],[.09,.56],[.07,.65],[0,.65]],det:[['prop',0,.12]]},
+ geran5:{L:6,S:5.5,paint:'#2f3236',out:[[0,0],[.25,.4],[.35,1.2],[.35,2.4],[2.75,3.1],[2.75,3.5],[.35,3.4],[.35,5.3],[1,5.8],[1,6],[0,6]],det:[['circ',0,4.5,.3],['nozzle',0,5.9,.25]]},
+ banderol:{L:3,S:1.2,paint:'#4a4f52',out:[[0,0],[.12,.25],[.15,.8],[.15,1.2],[.6,1.5],[.6,1.65],[.15,1.6],[.15,2.7],[.4,2.9],[.4,3],[0,3]],det:[['nozzle',0,2.95,.12]]},
+ kh22:{L:11.67,S:3,paint:'#b9bcbf',out:[[0,0],[.25,1.2],[.46,3],[.46,5.5],[1.5,8],[1.5,9],[.46,9],[.46,10.8],[1.2,11.4],[1.2,11.67],[0,11.67]],det:[['nozzle',0,11.6,.4]]},
 };
 const modelOf = d => MODELS[d.model || d.id];
 // детермінований камуфляж і спроба підвантажити власні PNG із sprites/
@@ -331,7 +358,8 @@ function drawFit(cv, d) {
 const modelPx = d => 10 + Math.sqrt(modelOf(d).L) * 5.5;
 // ракета в довіднику: 3D-знімок або 2D-малюнок у реальних пропорціях (ніс угору-праворуч)
 function drawMissile(cv, d) {
-  if (SET.cx3d && G3) return G3.snapMsl(cv, d.id);
+  if (d.gun) return drawRound(cv, d);
+  if (SET.cx3d && G3) return G3.snapMsl(cv, d.dimKey || d.id, d.dim);
   const c = cv.getContext('2d'), s = cv.width, [len, dia] = d.dim, k = s * .8 / len, w = Math.max(3, dia * k), L = len * k;
   c.clearRect(0, 0, s, s); c.save(); c.translate(s / 2, s / 2); c.rotate(-Math.PI / 4);
   const gr = c.createLinearGradient(0, -w / 2, 0, w / 2); gr.addColorStop(0, '#7d7d76'); gr.addColorStop(.5, '#f0eee6'); gr.addColorStop(1, '#7d7d76');
@@ -343,11 +371,52 @@ function drawMissile(cv, d) {
   c.restore();
 }
 
+// набій для черг (гармата/кулемет): гільза + куля
+function drawRound(cv, d) {
+  const c = cv.getContext('2d'), s = cv.width; c.clearRect(0, 0, s, s); c.save(); c.translate(s / 2, s / 2); c.rotate(-Math.PI / 4);
+  const L = s * .7, w = L * .22, g1 = c.createLinearGradient(0, -w / 2, 0, w / 2); g1.addColorStop(0, '#8a6a20'); g1.addColorStop(.5, '#f2d27a'); g1.addColorStop(1, '#8a6a20');
+  c.fillStyle = g1; c.fillRect(-L / 2, -w / 2, L * .62, w);
+  const g2 = c.createLinearGradient(0, -w / 2, 0, w / 2); g2.addColorStop(0, '#555'); g2.addColorStop(.5, '#ccc'); g2.addColorStop(1, '#555');
+  c.fillStyle = g2; c.beginPath(); c.moveTo(L * .12, -w * .42); c.lineTo(L * .32, -w * .3); c.quadraticCurveTo(L / 2, 0, L * .32, w * .3); c.lineTo(L * .12, w * .42); c.fill();
+  c.restore();
+}
+// маленькі зображення ракет у панелі закупівлі (рендер один раз, далі з кешу)
+const MSL_PIC = {};
+function mslPic(m) {
+  const k = (m.tbl || 'aam') + ':' + m.id + ':' + (SET.cx3d && G3 ? 3 : 2);
+  if (!MSL_PIC[k]) { const cv = document.createElement('canvas'); cv.width = cv.height = 96; drawMissile(cv, {id: m.id, dim: m.dim || MSL3[m.id], gun: m.gun, dimKey: m.tbl === 'sam' ? 'sam:' + m.id : m.id}); MSL_PIC[k] = cv.toDataURL(); }
+  return MSL_PIC[k];
+}
+const mi = m => `<img class="mi" src="${mslPic(m)}" alt="">`;
+
 const toLL = (x, y) => L.latLng(LAT0 + y / KY, LNG0 + x / KX);
 // ================= SETTINGS & AUDIO =================
 const SET = {master: .8, sfx: .8, music: .35, siren: true, ranges: true, labels: true, shake: true, shadows: true, routes: true, diff: 2, cx3d: true,
-  v3_air: true, v3_heli: true, v3_uav: true, v3_enemy: true, v3_sam: true};
+  v3_air: true, v3_heli: true, v3_uav: true, v3_enemy: true, v3_sam: true, voice: true, alerts: true,
+  adv: {pk: {}, debris: null, balWarn: null, hunt: null, balSlow: true}};
 try { Object.assign(SET, JSON.parse(localStorage.getItem('kupol-settings') || '{}')); } catch (e) {}
+SET.adv = {pk: {}, balSlow: true, ...(SET.adv || {})}; SET.adv.pk ||= {};
+// розширені налаштування → параметри «судді» (null — стандартне значення)
+const advOpt = () => { const a = SET.adv, o = {pk: a.pk}; for (const k of ['debris', 'balWarn', 'hunt']) if (a[k] != null && a[k] !== '') o[k] = +a[k]; return o; };
+
+// ================= ГОЛОС (оповіщення як у застосунку «Повітряна тривога») =================
+const VOICE = {
+  alarm: 'Увага! Повітряна тривога! Негайно прямуйте до найближчого укриття.',
+  clear: 'Відбій повітряної тривоги. Будьте уважні.',
+  bal: 'Увага! Високий рівень небезпеки! Загроза застосування балістичного озброєння! Негайно прямуйте в укриття!',
+  cruise: 'Увага! Високий рівень небезпеки! Зафіксовано пуски крилатих ракет! Негайно прямуйте в укриття!',
+  pkr: 'Увага! Високий рівень небезпеки! Загроза надзвукових ракет! Негайно прямуйте в укриття!',
+  balwarn: 'Увага! Попередження про можливий пуск балістики.',
+};
+function speak(key) {
+  if (!SET.voice || !window.speechSynthesis) return;
+  const vs = speechSynthesis.getVoices(), v = vs.find(x => /^uk/i.test(x.lang)) || vs.find(x => /^ru/i.test(x.lang));
+  if (!v) return; // немає українського/російського голосу — лишається напис і сигнал
+  const u = new SpeechSynthesisUtterance(VOICE[key]); u.voice = v; u.lang = v.lang; u.rate = 1.02; u.volume = Math.min(1, SET.master + .2);
+  speechSynthesis.speak(u);
+}
+let dangerT = 0;
+function danger(text) { const el = document.getElementById('danger'); el.textContent = text; el.classList.remove('hidden'); clearTimeout(dangerT); dangerT = setTimeout(() => el.classList.add('hidden'), 9000); }
 const saveSet = () => { try { localStorage.setItem('kupol-settings', JSON.stringify(SET)); } catch (e) {} };
 
 const AU = {
@@ -422,6 +491,18 @@ const oblLayer = L.layerGroup([
   L.polyline(OBL_POLY, {color: '#000', weight: 6, opacity: .5, interactive: false}),
   L.polyline(OBL_POLY, {color: '#ffd54a', weight: 3, dashArray: '10 6', interactive: false}),
 ]);
+// Білорусь — зона ППО противника; райони — тривоги
+const byLayer = L.layerGroup([
+  L.polygon(BY_POLY, {color: '#ff3b3b', weight: 2, dashArray: '4 6', fillColor: '#ff3b3b', fillOpacity: .12, interactive: false}),
+  L.marker([51.75, 29.2], {interactive: false, icon: L.divIcon({className: '', html: '<div style="color:#ff8a8a;font:bold 12px system-ui;white-space:nowrap;text-shadow:0 0 3px #000">БІЛОРУСЬ — ППО противника</div>'})}),
+]);
+const rLayers = RAIONS.map(r => L.polygon(r.ll, {color: '#4fd1e0', weight: 1, opacity: .45, fillOpacity: 0, interactive: false}).bindTooltip(r.name, {sticky: true}));
+const alertLayer = L.layerGroup(rLayers);
+const ALC = ['transparent', '#ffd54a', '#ff3b3b'];
+function paintAlerts() {
+  if (!G) return;
+  rLayers.forEach((l, i) => { const lv = SET.alerts ? G.alerts[i].lvl : 0; l.setStyle({fillColor: ALC[lv], fillOpacity: lv ? (lv === 2 ? .2 : .13) : 0, color: lv === 2 ? '#ff5a5a' : lv ? '#ffd54a' : '#4fd1e0', opacity: lv ? .8 : .35}); });
+}
 const P = (x, y) => map.latLngToContainerPoint(toLL(x, y));
 const kmPx = () => (P(10, 0).x - P(0, 0).x) / 10;
 
@@ -445,10 +526,10 @@ const DETAIL3D = {
   l39: {hp: [[2.6, 6.7]], intake: [[.62, 4.3, 5.9, .3, .4]]},
   mi24: {hp: [[2.9, 7], [2, 7]], fins: [[0, 15.8, 17.4]]},
   mi8: {hp: [[1.7, 6.5]], fins: [[0, 16.8, 18.2]]},
-  kh101: {nose: .12}, kalibr: {nose: .1}, iskander: {nose: .2}, kinzhal: {nose: .22},
+  kh101: {nose: .12}, kalibr: {nose: .1}, iskander: {nose: .2}, kinzhal: {nose: .22}, kh22: {nose: .14}, banderol: {nose: .1}, geran5: {nose: .08},
 };
 // розміри ракет «повітря-повітря»: [довжина, діаметр], м
-const MSL3 = {r60: [2.1, .12], r73: [2.9, .17], r27r: [4.08, .23], r27er: [4.78, .26], aim9m: [2.87, .13], aim9x: [3.02, .13], aim120: [3.65, .18], mica: [3.1, .16], magic: [2.75, .16], irist: [2.94, .13], meteor: [3.65, .18], igla: [1.57, .07]};
+const MSL3 = {r60: [2.1, .12], r73: [2.9, .17], r27r: [4.08, .23], r27er: [4.78, .26], aim9m: [2.87, .13], aim9x: [3.02, .13], aim120: [3.65, .18], mica: [3.1, .16], magic: [2.75, .16], irist: [2.94, .13], meteor: [3.65, .18], igla: [1.57, .07], apkws: [1.87, .07], r27t: [3.8, .23]};
 const G3 = (() => {
   const T = window.THREE; if (!T) return null;
   let R, SR;
@@ -566,7 +647,7 @@ const G3 = (() => {
         g.add(rack);
       }
     }
-    if (veh && !['buk', 's200', 's125'].includes(m.id)) { // колеса: вантажівки — по всій довжині, причепи — одна-дві осі ззаду
+    if (veh && !['buk', 's200', 's125', 'gepard'].includes(m.id)) { // колеса: вантажівки — по всій довжині, причепи — одна-дві осі ззаду
       const trailer = ['nasams', 'hawk', 'aspide'].includes(m.id), n = trailer ? 2 : Math.max(3, Math.round((L - 2) / 2.3));
       const y0 = trailer ? L * .55 : 1.4, y1 = L - 1.2;
       for (let i = 0; i < n; i++) for (const s of [1, -1]) {
@@ -583,9 +664,9 @@ const G3 = (() => {
   }
   // підвіска: баки займають точки ближче до фюзеляжу, ракети — від кінців крила
   const mslTpl = {};
-  function mslObj(id) {
+  function mslObj(id, dim) {
     if (!mslTpl[id]) {
-      const [len, d] = MSL3[id] || SAM_MSL[id]?.dim || [3, .15], g = new T.Group();
+      const [len, d] = dim || MSL3[id] || SAM_MSL[id]?.dim || [3, .15], g = new T.Group();
       const body = new T.Mesh(new T.CylinderGeometry(d / 2, d / 2, len * .85, 8), mslM); body.position.y = -len * .075; g.add(body);
       const nose = new T.Mesh(new T.ConeGeometry(d / 2, len * .15, 8), mslM); nose.position.y = len * .425; g.add(nose);
       for (const a of [0, Math.PI / 2]) { const f = new T.Mesh(new T.BoxGeometry(d * 3.2, len * .12, .02), mslM); f.position.y = -len * .42; f.rotation.y = a; g.add(f); }
@@ -655,8 +736,8 @@ const G3 = (() => {
     begin() { frame++; },
     place,
     end() { for (const [o, r] of live) if (r.f !== frame) { scene.remove(r.g, r.sh); live.delete(o); } R.render(scene, cam); },
-    snapMsl(cv, id) {
-      const s = new T.Scene(), o = mslObj(id), len = (MSL3[id] || SAM_MSL[id].dim)[0], D = len * .6; lights(s);
+    snapMsl(cv, id, dim) {
+      const s = new T.Scene(), o = mslObj(id, dim), len = (dim || MSL3[id] || SAM_MSL[id].dim)[0], D = len * .6; lights(s);
       o.rotation.z = -Math.PI / 4; s.add(o);
       const c = new T.OrthographicCamera(-D, D, D, -D, -100, 100); c.position.set(D * .4, -D * .7, D); c.up.set(0, 0, 1); c.lookAt(0, 0, 0);
       SR.render(s, c); const x = cv.getContext('2d'); x.clearRect(0, 0, cv.width, cv.height); x.drawImage(SR.domElement, 0, 0, cv.width, cv.height);
@@ -695,6 +776,47 @@ document.querySelectorAll('[data-set]').forEach(inp => {
   inp.oninput = () => { SET[k] = inp.type === 'checkbox' ? inp.checked : +inp.value; saveSet(); AU.apply(); };
 });
 $('opKyiv').onclick = () => { AU.click(); startOp(); };
+// ================= РОЗШИРЕНІ НАЛАШТУВАННЯ =================
+// Шанс ураження для кожної ракети/набою по БпЛА, КР і БР; порожнє поле — стандартне значення.
+const KN = {drone: 'БпЛА', cruise: 'КР', bal: 'БР'};
+function advRows() {
+  const rows = [];
+  for (const m of Object.values(SAM_MSL)) rows.push({key: 'sam:' + m.id, name: m.name, sub: SAM.filter(d => d.msl.includes(m.id)).map(d => d.name.replace(' ★', '')).join(', '), kinds: m.bm ? ['drone', 'cruise', 'bal'] : ['drone', 'cruise'], def: k => pkDefault(m, k)});
+  const sam = rows.length;
+  for (const m of Object.values(AAM)) rows.push({key: 'aam:' + m.id, name: m.name, sub: AIR.filter(d => d.aam.includes(m.id)).map(d => d.name).join(', '), kinds: ['drone', 'cruise'], def: k => pkDefault(m, k)});
+  const aam = rows.length;
+  for (const d of AIR) if (d.gun) rows.push({key: 'gun:' + d.id, name: d.gun.name, sub: d.name + ' (одна черга)', kinds: ['drone', 'cruise'], def: k => k === 'drone' ? d.gun.pk : d.gun.pk / 2});
+  const gun = rows.length;
+  for (const d of UAV) if (d.role === 'interceptor') rows.push({key: 'uav:' + d.id, name: d.name, sub: 'дрон-перехоплювач', kinds: ['drone'], def: () => d.pk});
+  return {rows, cuts: [[0, 'Зенітні ракети і набої (ППО, МВГ)'], [sam, 'Ракети «повітря-повітря»'], [aam, 'Гармати авіації'], [gun, 'Дрони-перехоплювачі']]};
+}
+function renderAdv() {
+  const a = SET.adv, {rows, cuts} = advRows(), pc = v => v == null || v === '' ? '' : Math.round(v * 100);
+  let h = `<h4>Загальне</h4><table>
+    <tr><td>Шанс, що збита ціль з БЧ упаде уламками, %</td><td><input type="number" min="0" max="100" data-g="debris" value="${pc(a.debris)}" placeholder="20"></td></tr>
+    <tr><td>Шанс, що прийде попередження про балістику, %</td><td><input type="number" min="0" max="100" data-g="balWarn" value="${pc(a.balWarn)}" placeholder="75"></td></tr>
+    <tr><td>Частка дронів, що полюють на ППО, % (порожньо — за складністю)</td><td><input type="number" min="0" max="100" data-g="hunt" value="${pc(a.hunt)}" placeholder="авто"></td></tr>
+    <tr><td>Попередження про балістику сповільнює гру до 1×</td><td><input type="checkbox" data-g="balSlow" ${a.balSlow ? 'checked' : ''}></td></tr></table>
+    <div class="note">Шанс ураження однією ракетою / чергою, %. Порожнє поле — стандартне значення (сіре).</div>`;
+  rows.forEach((r, i) => {
+    const cut = cuts.find(c => c[0] === i); if (cut) h += `${i ? '</table>' : ''}<h4>${cut[1]}</h4><table><tr><th></th><th>БпЛА</th><th>КР</th><th>БР</th></tr>`;
+    h += `<tr><td>${r.name}<div class="note" style="margin:0">${r.sub}</div></td>${['drone', 'cruise', 'bal'].map(k => r.kinds.includes(k)
+      ? `<td><input type="number" min="0" max="100" data-pk="${r.key}" data-k="${k}" value="${pc(a.pk[r.key]?.[k])}" placeholder="${Math.round(r.def(k) * 100)}"></td>` : '<td class="note">—</td>').join('')}</tr>`;
+  });
+  h += `</table><button id="advReset" style="width:100%;margin-top:10px">Скинути все до стандартних</button>`;
+  $('advBox').innerHTML = h;
+  const apply = () => { saveSet(); if (G) G.opt = {...G.opt, ...{debris: .2, balWarn: .75, hunt: null}, ...advOpt()}; };
+  $('advBox').querySelectorAll('[data-g]').forEach(inp => inp.onchange = () => {
+    a[inp.dataset.g] = inp.type === 'checkbox' ? inp.checked : inp.value === '' ? null : Math.max(0, Math.min(100, +inp.value)) / 100; apply();
+  });
+  $('advBox').querySelectorAll('[data-pk]').forEach(inp => inp.onchange = () => {
+    const o = a.pk[inp.dataset.pk] ||= {};
+    if (inp.value === '') delete o[inp.dataset.k]; else o[inp.dataset.k] = Math.max(0, Math.min(100, +inp.value)) / 100;
+    if (!Object.keys(o).length) delete a.pk[inp.dataset.pk]; apply();
+  });
+  $('advReset').onclick = () => { AU.click(); SET.adv = {pk: {}, balSlow: true}; apply(); renderAdv(); };
+}
+$('advT').onclick = () => { AU.click(); const box = $('advBox'), open = box.classList.toggle('hidden'); $('advT').textContent = `Розширені налаштування ${open ? '▸' : '▾'}`; if (!open) renderAdv(); };
 function renderDiff() {
   $('diffBtns').innerHTML = DIFF.map((d, i) => `<button data-diff="${i}" class="${i === SET.diff ? 'on' : ''}" style="padding:6px 10px">${d.name}</button>`).join('');
   const d = DIFF[SET.diff];
@@ -711,20 +833,23 @@ $('mAgain').onclick = () => { $('modal').classList.add('hidden'); startOp(); };
 $('mMenu').onclick = () => { $('modal').classList.add('hidden'); toMenu(); };
 
 function extraRows(d) {
-  if (d.msl && d.cap) return [['Ракети', d.msl.map(k => `${SAM_MSL[k].name} (${SAM_MSL[k].note}, ${SAM_MSL[k].cost} ⛁)`).join('<br>')], ['Розгортання', `${d.cost} ⛁`]];
+  if (d.msl && d.cap) return [['Боєкомплект', d.msl.map(k => `${SAM_MSL[k].name} (${SAM_MSL[k].note}, ${SAM_MSL[k].cost} ⛁)`).join('<br>')], ['Розгортання', `${d.cost} ⛁`], ...(d.mobile ? [['Переїзд', `${d.speed} км/год, 1 ⛁ пального`]] : [])];
   if (d.fuel) return [
     ['Ракети', d.aam.length ? `до ${d.msl}: ` + d.aam.map(k => `${AAM[k].name} (${AAM[k].note})`).join(', ') : '—'],
     ['Гармата', d.gun ? `${d.gun.name}, ${d.gun.rounds} снарядів` : '—'], ['Придбання', `${d.cost} ⛁`]];
+  if (d.role === 'kamikaze') return [['Удар по пускових', `шанс прорватися ~${Math.round(d.pSucc * 100)}%, зриває ~${Math.round(d.power * 100)}% пусків`], ['Запуск', `${d.cost} ⛁`]];
   if (d.cost) return [['Запуск', `${d.cost} ⛁`]];
   return [];
 }
 // вкладка «Ракети»: зенітні та «повітря-повітря», з реальними розмірами (без поля cost — ціна в info)
 const MSL_LIST = () => [
-  ...Object.values(SAM_MSL).map(m => ({id: m.id, name: m.name, dim: m.dim, info: [['Тип', 'зенітна керована ракета'], ['Комплекс', SAM.filter(s => s.msl.includes(m.id)).map(s => s.name).join(', ')],
-    ['Дальність', `${m.range} км`], ['Швидкість', `${m.v} м/с`], ['Балістика', balText(m)], ['Розміри', `~${m.dim[0]} × ${m.dim[1]} м`], ['Ціна', `${m.cost} ⛁`], ['Примітка', m.note]]})),
+  ...Object.values(SAM_MSL).map(m => ({id: m.id, dimKey: 'sam:' + m.id, gun: m.gun, name: m.name, dim: m.dim, info: [['Тип', m.gun ? 'набої (черга)' : 'зенітна керована ракета'], ['Комплекс', SAM.filter(s => s.msl.includes(m.id)).map(s => s.name).join(', ')],
+    ['Дальність', `${m.range} км`], ['Швидкість', `${m.v} м/с`], ['Ураження', pkText(m)], ['Розміри', `~${m.dim[0]} × ${m.dim[1]} м`], ['Ціна', `${m.cost} ⛁${m.pack ? ` за ${m.pack} черг` : ''}`], ['Примітка', m.note]]})),
   ...Object.values(AAM).map(m => ({id: m.id, name: m.name, dim: MSL3[m.id], info: [['Тип', 'ракета «повітря-повітря»'], ['Носії', AIR.filter(a => a.aam.includes(m.id)).map(a => a.name).join(', ')],
-    ['Дальність', `${m.range} км`], ['Швидкість', `${m.v} м/с`], ['Захоплення', `${m.lock} с`], ['Розміри', `~${MSL3[m.id][0]} × ${MSL3[m.id][1]} м`], ['Ціна', `${m.cost} ⛁`], ['Примітка', m.note]]})),
+    ['Дальність', `${m.range} км`], ['Швидкість', `${m.v} м/с`], ['Захоплення', `${m.lock} с`], ['Ураження', pkText(m)], ['Розміри', `~${MSL3[m.id][0]} × ${MSL3[m.id][1]} м`], ['Ціна', `${m.cost} ⛁`], ['Примітка', m.note]]})),
 ];
+const pkText = m => ['drone', 'cruise', 'bal'].filter(k => k !== 'bal' || m.bm).map(k => `${KN[k]} ${Math.round(pkDefault(m, k) * 100)}%`).join(' · ');
+const shareRow = d => d.w ? [['Частка пусків', `~${d.w < 1 ? d.w.toFixed(1).replace('.', ',') : Math.round(d.w)}% (за рік)`]] : d.recon ? [['Частка пусків', 'розвідник, 0–5 на хвилю']] : [];
 const CX = {sam: ['ППО', SAM], air: ['Авіація', AIR], uav: ['БпЛА', UAV], enemy: ['Противник', Object.values(ENEMY)], msl: ['Ракети', null]};
 let cxTab = 'sam';
 const credit = d => { const g = modelOf(d)?.glb; return g ? [['3D-модель', `<a href="${g.url}" target="_blank" rel="noopener" style="color:var(--acc)">${g.name}</a> — ${g.author}, ${g.license}`]] : []; };
@@ -735,7 +860,7 @@ function codex(tab) {
   $('cxTabs').querySelectorAll('[data-cx]').forEach(b => b.onclick = () => { AU.click(); codex(b.dataset.cx); });
   if (G3) $('cx3d').onclick = () => { AU.click(); SET.cx3d = !SET.cx3d; saveSet(); codex(tab); if (G) renderCards(); };
   const list = CX[tab][1] || MSL_LIST();
-  $('cxGrid').innerHTML = list.map((d, i) => `<div class="cx"><canvas width="220" height="220" data-i="${i}"></canvas><div><b>${d.name}</b><span class="note">${d.country ? d.country + ' · ' : ''}id: ${d.model || d.id}</span><table>${[...d.info, ...extraRows(d), ...credit(d)].map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table></div></div>`).join('');
+  $('cxGrid').innerHTML = list.map((d, i) => `<div class="cx"><canvas width="220" height="220" data-i="${i}"></canvas><div><b>${d.name}</b><span class="note">${d.country ? d.country + ' · ' : ''}id: ${d.model || d.id}</span><table>${[...d.info, ...(tab === 'enemy' ? shareRow(d) : []), ...extraRows(d), ...credit(d)].map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table></div></div>`).join('');
   $('cxGrid').querySelectorAll('canvas').forEach(cv => drawFit(cv, list[cv.dataset.i]));
 }
 codex('sam');
@@ -748,19 +873,19 @@ let V = null;
 const cmd = c => command(c);
 function startOp() {
   show(null);
-  G = newGame(SET.diff);
+  G = newGame(SET.diff, advOpt());
   V = {speed: 30, lastSpeed: 30, paused: false, tab: 'sam', pending: null, cursor: null, sel: null, selMin: false, log: [], booms: [], parts: [], tracers: [], shake: 0, flash: 0};
   $('hud').classList.remove('hidden'); $('sel').classList.add('hidden'); $('log').innerHTML = '';
   document.querySelectorAll('#side [data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === 'sam'));
   map.setMaxBounds(null);
   map.flyToBounds(OBL, {duration: 2, paddingTopLeft: [10, 70], paddingBottomRight: [310, 10]});
   map.once('moveend', () => { map.setMaxBounds(L.latLngBounds(OBL).pad(.7)); map.setMinZoom(Math.max(5, map.getZoom() - 1.5)); });
-  oblLayer.addTo(map);
+  oblLayer.addTo(map); byLayer.addTo(map); alertLayer.addTo(map); $('balwarn').classList.add('hidden');
   setSpeed(30); renderCards();
   logMsg('Розгорніть ППО: комплекс праворуч → клік по карті. Час іде в 30× від реального (1× — реальний).', 'warn');
 }
 function toMenu() {
-  G = null; V = null; $('hud').classList.add('hidden'); oblLayer.remove();
+  G = null; V = null; $('hud').classList.add('hidden'); oblLayer.remove(); byLayer.remove(); alertLayer.remove(); $('balwarn').classList.add('hidden');
   map.setMaxBounds(null); map.setMinZoom(5); map.flyToBounds(UKR, {duration: 1.5});
   show('main');
 }
@@ -779,13 +904,26 @@ function drainEvents() {
     else if (type === 'tracer') V.tracers.push({x: a, y: b, tx: c, ty: d, t: 0});
     else if (type === 'shake') { V.shake = Math.min(14, V.shake + a); V.flash = Math.min(.35, V.flash + b); }
     else if (type === 'end') endScreen(a);
+    else if (type === 'voice') {
+      if (a === 'high') { speak(b); danger(b === 'bal' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — БАЛІСТИКА' : b === 'pkr' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — НАДЗВУКОВІ РАКЕТИ' : '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — КРИЛАТІ РАКЕТИ'); AU.siren(); }
+      else speak(a);
+    } else if (type === 'balwarn') balWarn(a, b);
   }
   G.out.length = 0;
+}
+// попередження партнерів про пуск балістики: висить, доки гравець не закриє; гра сповільнюється до 1×
+function balWarn(dir, type) {
+  const el = $('balwarn');
+  el.innerHTML = `<h3>📡 Попередження від західних партнерів</h3><div>Зафіксовано підготовку до пуску балістичної ракети (${type}).<br>Напрямок: <b>${dir}</b>. Пуск ≈ через <b>20 с</b>.</div>
+    <div class="note" style="margin:6px 0 0">Переведіть Patriot / SAMP/T на балістику. Таке попередження приходить не завжди.</div><button id="bwOk">Прийнято — закрити</button>`;
+  el.classList.remove('hidden'); speak('balwarn');
+  if (SET.adv.balSlow && V.speed > 1) { V.bwPrev = V.speed; setSpeed(1); }
+  $('bwOk').onclick = () => { AU.click(); el.classList.add('hidden'); if (V?.bwPrev) { setSpeed(V.bwPrev); V.bwPrev = 0; } };
 }
 function endScreen(win) {
   V.paused = true;
   $('mTitle').textContent = win ? 'Операцію виконано' : 'Оборону прорвано';
-  $('mText').innerHTML = `Хвиль: ${G.wave}/${WAVES.length}<br>Збито: ${G.kills}<br>Влучань: ${G.leaks}<br>Витрачено: ${G.spent} ⛁<br>Стан Києва: ${Math.round(G.cities[0].hp / G.cities[0].max * 100)}%`;
+  $('mText').innerHTML = `Хвиль: ${G.wave}/${WAVES.length}<br>Збито: ${G.kills}<br>Влучань: ${G.leaks}<br>Витрачено: ${G.spent} ⛁<br>Стан Києва: ${Math.round(G.cities[0].hp / G.cities[0].max * 100)}%<br>Зруйновано міст: ${lostCities()} (межа ${loseLimit()})<br>Виведено з ладу обʼєктів: ${G.cities.filter(c => c.t !== 'city' && c.hp <= 0).length}`;
   $('modal').classList.remove('hidden');
   if (win) AU.chime(); else AU.impact();
 }
@@ -829,12 +967,12 @@ addEventListener('keydown', e => {
 });
 
 // ================= CARDS (права панель) =================
-const ROLE = {fighter: 'винищувач', hunter: 'мисливець на дрони', strike: 'ударний', recon: 'розвідка', interceptor: 'перехоплювач', kamikaze: 'удар по пускових'};
+const ROLE = {fighter: 'винищувач', hunter: 'мисливець на дрони', strike: 'ударний', recon: 'розвідка', interceptor: 'перехоплювач', kamikaze: 'удар по пускових', awacs: 'ДРЛО (радар 350 км)'};
 const defs = () => V.tab === 'sam' ? SAM : V.tab === 'air' ? AIR : UAV;
 const owned = d => G.air.filter(a => a.d === d);
 function renderCards() {
   $('cards').innerHTML = defs().map(d => `<div class="card" data-id="${d.id}"><canvas width="80" height="80" style="width:40px;height:40px"></canvas><div><b>${d.name}</b><small>${
-    V.tab === 'sam' ? `до ${samRange(d)} км · ${d.bm ? 'ППО+ПРО' : 'ППО'}` : ROLE[d.role] + (d.msl ? ` · до ${d.msl} ракет` : '')
+    V.tab === 'sam' ? `до ${samRange(d)} км · ${d.bm ? 'ППО+ПРО' : d.mobile ? 'мобільна' : 'ППО'}` : ROLE[d.role] + (d.msl ? ` · до ${d.msl} ракет` : '')
   }</small></div><span class="badge"></span></div>`).join('');
   $('cards').querySelectorAll('.card').forEach(el => {
     const d = defs().find(x => x.id === el.dataset.id);
@@ -869,7 +1007,7 @@ function cardClick(d) {
     const a = cmd({t: 'buyAir', def: d.id}); if (a) select(a);
     return;
   }
-  if (d.role === 'kamikaze') { cmd({t: 'kamikaze', def: d.id}); return; }
+  if (d.role === 'kamikaze') { if (G.res < d.cost) { logMsg(`Бракує ресурсу (потрібно ${d.cost} ⛁).`, 'bad'); return; } select({kind: 'strikepick', d}); return; }
   if (G.res < d.cost) { logMsg(`Бракує ресурсу (потрібно ${d.cost} ⛁).`, 'bad'); return; }
   const next = V.pending?.d === d ? null : {kind: V.tab, d};
   select(null); // select() скидає pending, тому ставимо його після
@@ -885,9 +1023,10 @@ function pickAt(cp, onlyEnemy) {
   G.sams.forEach(s => test(s, 'unit'));
   G.air.forEach(a => a.state !== 'base' && a.state !== 'service' && test(a, 'unit'));
   G.uavs.forEach(u => u.state !== 'strike' && test(u, 'unit'));
+  if (!best && !myUnit(V.sel)) { bd = 10; G.cities.forEach(c => test(c, 'city')); }
   return best;
 }
-const myUnit = u => u && u.kind !== 'enemy';
+const myUnit = u => u && ['sam', 'air', 'uav'].includes(u.kind);
 function select(u) { V.sel = u; V.pending = null; renderSel(); updateCards(); }
 map.on('mousemove', e => { if (V) V.cursor = toXY(e.latlng.lat, e.latlng.lng); });
 map.on('click', e => {
@@ -903,7 +1042,7 @@ map.on('click', e => {
   if (myUnit(V.sel) && en) { cmd({t: 'assign', unit: V.sel.id, target: en.o.id}); AU.click(); return; }
   if (hit) { select(hit.o); AU.click(); return; }
   const u = V.sel;
-  if (u && ((u.kind === 'air' && u.d.role !== 'strike') || (u.kind === 'uav' && u.d.role !== 'kamikaze'))) { cmd({t: 'move', unit: u.id, ...pt}); AU.click(); }
+  if (u && ((u.kind === 'air' && u.d.role !== 'strike') || (u.kind === 'uav' && u.d.role !== 'kamikaze') || (u.kind === 'sam' && u.d.mobile))) { cmd({t: 'move', unit: u.id, ...pt}); AU.click(); }
   else select(null);
 });
 
@@ -911,7 +1050,9 @@ map.on('click', e => {
 const STATE = {base: 'на базі', service: 'дозаправка й дозарядка', move: 'в польоті', patrol: 'патрулювання', intercept: 'перехоплення', rtb: 'повертається на базу', strikeOut: 'летить на удар'};
 const chips = (u, kinds) => `<div class="btns">${kinds.map(k => `<button class="chip ${u.filt[k] ? 'on' : ''}" data-act="f:${k}">${KIND[k]}</button>`).join('')}</div>`;
 const bar = (k, col = 'var(--acc)') => `<div class="bar"><i style="width:${Math.max(0, Math.min(1, k)) * 100}%;background:${col}"></i></div>`;
-function alive(u) { return u && (u.kind === 'sam' ? G.sams : u.kind === 'air' ? G.air : u.kind === 'enemy' ? G.enemies : G.uavs).includes(u); }
+function alive(u) { return u && (u.kind === 'strikepick' || (u.kind === 'sam' ? G.sams : u.kind === 'air' ? G.air : u.kind === 'enemy' ? G.enemies : u.t ? G.cities : G.uavs).includes(u)); }
+const KIND_OBJ = {city: 'населений пункт', energy: 'енергетика', air: 'аеропорт', base: 'ваш аеродром', fuel: 'нафтобаза', rail: 'залізничний вузол', misc: 'обʼєкт', depot: 'склад озброєння'};
+const siteBtns = (act, d) => `<div class="sites">${SITES.map(s => `<button data-act="${act}:${s.id}"><b>${s.name}</b> <span class="k">~${s.km} км · ${Math.round(s.km / (d.cruise || 1000) * 60 + (d.cruise ? 0 : 10))} хв · пусків з напрямку ${s.dirs.join('/')}${G.siteMult[s.id] < 1 ? ` · вже −${Math.round((1 - G.siteMult[s.id]) * 100)}%` : ''}</span></button>`).join('')}</div>`;
 const selBtns = () => `<span style="display:flex;gap:4px"><button data-act="min" title="Згорнути / розгорнути">${V.selMin ? '▴' : '▾'}</button><button data-act="close" title="Закрити">✕</button></span>`;
 function renderSel() {
   const u = V?.sel, el = $('sel');
@@ -919,6 +1060,21 @@ function renderSel() {
   el.classList.remove('hidden'); el.classList.toggle('enemy', u.kind === 'enemy');
   const d = u.d;
   let h;
+  if (u.kind === 'strikepick') { // вибір пускового майданчика для дрона далекої дії
+    h = `<h3>Удар: ${d.name}${selBtns()}</h3>`;
+    if (!V.selMin) h += `<div class="k">Оберіть пусковий майданчик Shahed. Шанс прорватися ~${Math.round(d.pSucc * 100)}%, успіх зриває ~${Math.round(d.power * 100)}% пусків із цього напрямку. Ціна ${d.cost} ⛁.</div>${siteBtns('kam', d)}`;
+    el.innerHTML = h; return;
+  }
+  if (u.t) { // місто / обʼєкт / склад
+    h = `<h3>${u.name}${selBtns()}</h3>`;
+    if (V.selMin) { el.innerHTML = h; return; }
+    h += `<div><span class="k">Тип:</span> ${KIND_OBJ[u.t]}</div><div class="k">Стан ${Math.round(u.hp / u.max * 100)}%</div>${bar(u.hp / u.max, u.hp / u.max > .5 ? 'var(--ok)' : 'var(--bad)')}`;
+    if (u.t === 'depot') h += `<div>Постачає: ${SUP_NAME[u.sup]}${u.hp <= 0 ? ` · <span style="color:var(--bad)">знищено, відновлення через ${u.down} хвил.</span>` : ''}</div>`;
+    else if (u.t !== 'city') h += `<div class="k">Якщо зруйнують: ${OBJ_INFO[u.t]}</div>`;
+    else h += `<div class="k">Зруйновано міст: ${lostCities()} з ${loseLimit()} допустимих (і Київ має вистояти).</div>`;
+    if (u.t !== 'city' && u.hp < u.max) h += `<div class="btns"><button data-act="repair">Відновити зараз (${u.t === 'depot' ? 30 : 20} ⛁)</button></div>`;
+    el.innerHTML = h; return;
+  }
   if (u.kind === 'enemy') {
     const kyiv = G.cities[0], v = u.v * 3600, eta = dist(u, u.wps.at(-1) || u) / u.v;
     h = `<h3>${u.ident ? u.def.name : PRELIM(u)}${selBtns()}</h3>`;
@@ -936,23 +1092,29 @@ function renderSel() {
   if (V.selMin) { el.innerHTML = h; return; }
   if (u.kind === 'sam') {
     h += `<div><span class="k">ПУ</span> ${used(u.load, SAM_MSL)}/${d.cap} місць · <span class="k">резерв</span> ${used(u.stock, SAM_MSL)}/${d.cap * 2} · <span class="k">реакція</span> ${d.react} с</div>`;
+    if (u.hp < 100) h += `<div class="k">Стан позиції ${u.hp}%${u.hp < 50 ? ' — реакція вдвічі повільніша' : ''}</div>${bar(u.hp / 100, 'var(--bad)')}`;
+    if (u.fired) h += `<div class="k" style="color:var(--warn)">Позиція виказала себе стрільбою — частина дронів полюватиме на неї.${d.mobile ? ' Переїдьте!' : ''}</div>`;
+    if (u.mv) h += `<div class="k">Переїзд на нову позицію… <button data-act="stop">Стоп</button></div>`;
     h += u.reload > 0 ? `<div class="k">Перезаряджання з резерву…</div>${bar(1 - u.reload / d.reload, 'var(--warn)')}` : '';
     if (u.lock) h += `<div class="k">Захоплення цілі: ${label(u.lock.e)}</div>${bar(1 - u.lock.t / u.lock.t0, 'var(--warn)')}`;
     h += `<div class="k" style="margin-top:4px">Ракети (клік по рядку — тип для автозакупівлі):</div>`;
     for (const mid of d.msl) {
       const m = SAM_MSL[mid];
-      h += `<div class="mrow ${u.buyType === mid ? 'pick' : ''}" data-act="pick:${mid}"><div><b>${m.name}</b><small>${m.range} км · ${m.v} м/с${d.bm ? ` · балістика: <span style="color:${m.bm ? 'var(--ok)' : 'var(--bad)'}">${balText(m)}</span>` : ''} · ${m.cost} ⛁ · на ПУ ${u.load[mid] || 0}, резерв ${u.stock[mid] || 0}</small></div>
+      const off = m.sup && supplyDown(m.sup);
+      h += `<div class="mrow ${u.buyType === mid ? 'pick' : ''}" data-act="pick:${mid}">${mi(m)}<div><b>${m.name}</b><small>${m.range} км · ${m.gun ? 'черга' : m.v + ' м/с'}${d.bm ? ` · балістика: <span style="color:${m.bm ? 'var(--ok)' : 'var(--bad)'}">${balText(m)}</span>` : ''} · ${pkText(m)} · ${price(m)} ⛁${m.pack ? `/${m.pack} черг` : ''} · на ПУ ${u.load[mid] || 0}, резерв ${u.stock[mid] || 0}${off ? ' · <span style="color:var(--bad)">склад знищено</span>' : ''}</small></div>
         <button data-act="b1:${mid}">+1</button><button data-act="bf:${mid}">+повна</button></div>`;
     }
     h += `<div class="btns"><button class="chip ${u.auto ? 'on' : ''}" data-act="auto">Автозакупівля</button></div>`;
     h += `<div class="k">Що збивати автоматично (впізнані імітатори пропускає):</div>${chips(u, d.bm ? ['drone', 'cruise', 'bal'] : ['drone', 'cruise'])}`;
     h += `<div><span class="k">Пріоритет:</span> ${u.force && !u.force.dead ? `${label(u.force)} <button data-act="unforce">Скинути</button>` : 'авто (клік по цілі — призначити)'}</div>`;
-    h += `<div class="btns"><button data-act="sell">Демонтувати (+${Math.round(d.cost / 2)} ⛁)</button></div>`;
+    if (d.mobile) h += `<div class="k">Клік по карті — переїхати (${d.speed} км/год, 1 ⛁ пального).</div>`;
+    h += `<div class="btns"><button data-act="sell">Демонтувати (+${Math.round(d.cost / 2 * u.hp / 100)} ⛁)</button></div>`;
   } else if (u.kind === 'air') {
     const atBase = u.state === 'base', mf = maxFuel(u);
     h += `<div><span class="k">Стан:</span> ${STATE[u.state]} · <span class="k">крейс.</span> ${d.cruise} км/год, <span class="k">перехоплення</span> ${d.dash} км/год</div>`;
     h += `<div class="k">Паливо ~${Math.round(u.fuel / 60)} хв з ${Math.round(mf / 60)}</div>${bar(u.fuel / mf, u.fuel / mf < .25 ? 'var(--bad)' : 'var(--ok)')}`;
-    if (u.state === 'service') h += `<div class="k">Обслуговування</div>${bar(1 - u.svc / 900, 'var(--warn)')}`;
+    if (u.state === 'service') h += `<div class="k">Заправка й обслуговування (1 ⛁ з борту)${u.feePaid ? '' : ' — чекає оплати'}</div>${bar(1 - u.svc / (900 * DIFF[G.diff].svcK), 'var(--warn)')}`;
+    if (grounded(u)) h += `<div style="color:var(--bad)">«Ветеран»: після посадки пропускає хвилю ${u.groundUntil}.</div>`;
     if (u.lock) h += `<div class="k">Захоплення: ${label(u.lock.e)}</div>${bar(1 - u.lock.t / u.lock.t0, 'var(--warn)')}`;
     if (u.aimT > 0 && u.tgt) h += `<div class="k">Прицілювання гарматою…</div>${bar(Math.min(1, u.aimT / 4), 'var(--warn)')}`;
     if (d.ptb) h += `<div class="mrow"><div><b>Підвісні баки (ПТБ)</b><small>${u.ptb}/${d.ptb} · +${d.ptbK * 100}% палива кожен, −${d.ptbSlot} ракети</small></div>
@@ -961,13 +1123,15 @@ function renderSel() {
       h += `<div class="k" style="margin-top:4px">Ракети ${sum(u.load)}/${maxMsl(u)}${atBase ? '' : ' (купівля — тільки на базі)'}:</div>`;
       for (const mid of d.aam) {
         const m = AAM[mid];
-        h += `<div class="mrow"><div><b>${m.name}</b><small>${m.note} · захоплення ${m.lock} с · ${m.cost} ⛁ · на борту ${u.load[mid] || 0}</small></div>
+        h += `<div class="mrow">${mi(m)}<div><b>${m.name}</b><small>${m.note} · захоплення ${m.lock} с · ${pkText(m)} · ${price(m)} ⛁ · на борту ${u.load[mid] || 0}</small></div>
           <button data-act="a-:${mid}" ${atBase && u.load[mid] ? '' : 'disabled'}>−</button><button data-act="a+:${mid}" ${atBase && sum(u.load) < maxMsl(u) ? '' : 'disabled'}>+</button></div>`;
       }
     }
     if (d.gun) h += `<div class="mrow"><div><b>${d.gun.name}</b><small>${d.gun.rounds} снарядів · черг ${u.gun}/${d.gun.bursts}${u.gun ? '' : ' · <span style="color:var(--bad)">не куплено</span>'}</small></div><button data-act="gun" ${atBase && u.gun < d.gun.bursts ? '' : 'disabled'}>Купити БК (${GUN_COST} ⛁)</button></div>`;
     if (d.role === 'strike') {
-      h += `<div class="btns"><button data-act="strike" ${atBase ? '' : 'disabled'}>Удар по пускових</button></div>`;
+      h += atBase ? `<div class="k">Удар Storm Shadow по пусковому майданчику (шанс ~${Math.round(d.pSucc * 100)}%, зриває ~${Math.round(d.power * 100)}% пусків):</div>${siteBtns('strike', d)}` : '';
+    } else if (d.role === 'awacs') {
+      h += `<div class="k">Радар ${d.radar} км: бачить низьколетючі крилаті ракети, яких не бачать наземні РЛС. Клік по карті — зона чергування.</div>`;
     } else {
       h += `<div class="k">Автоматично збивати:</div>${chips(u, ['drone', 'cruise'])}`;
       if (d.gun) h += `<div class="btns"><button class="chip ${u.gunMode ? 'on' : ''}" data-act="gm">Полювати на дрони гарматою</button></div>`;
@@ -987,6 +1151,8 @@ $('sel').addEventListener('pointerdown', e => {
   const u = V.sel, [act, arg] = b.dataset.act.split(':'); AU.click();
   if (act === 'close') return select(null);
   if (act === 'min') { V.selMin = !V.selMin; return renderSel(); }
+  if (act === 'kam') { cmd({t: 'kamikaze', def: u.d.id, site: arg}); return select(null); }
+  if (act === 'repair') { cmd({t: 'repair', obj: u.id}); return renderSel(); }
   cmd({t: 'act', unit: u.id, act, arg});
   if (act === 'sell') return select(null);
   renderSel();
@@ -1037,10 +1203,11 @@ function drawScene(rdt) {
     }
     for (const a of G.air) if (['patrol', 'move', 'intercept'].includes(a.state) && a.d.radar > 10) circle(a.x, a.y, a.d.radar, 'rgba(79,209,224,.3)', null, [2, 6]);
   }
-  if (SET.routes) { // типові коридори прольоту (наближено)
-    g.setLineDash([10, 7]); g.strokeStyle = 'rgba(255,80,60,.75)'; g.lineWidth = 2.5;
-    for (const r of Object.values(ROUTES)) {
-      g.beginPath(); r.pts.forEach(([la, ln], i) => { const q = map.latLngToContainerPoint([la, ln]); i ? g.lineTo(q.x, q.y) : g.moveTo(q.x, q.y); });
+  if (SET.routes) { // коридори прольоту цієї хвилі (щохвилі трохи інші, без Білорусі)
+    g.setLineDash([10, 7]); g.strokeStyle = 'rgba(255,80,60,.6)'; g.lineWidth = 2.5;
+    const rs = G.routes || Object.fromEntries(Object.entries(ROUTES).map(([k, r]) => [k, {pts: r.pts.map(([a, b]) => toXY(a, b))}]));
+    for (const r of Object.values(rs)) {
+      g.beginPath(); r.pts.forEach((p, i) => { const q = P(p.x, p.y); i ? g.lineTo(q.x, q.y) : g.moveTo(q.x, q.y); });
       const k = P(0, 0); g.lineTo(k.x, k.y); g.stroke();
     }
     g.setLineDash([]); g.lineWidth = 1;
@@ -1049,7 +1216,16 @@ function drawScene(rdt) {
   const b = P(BASE.x, BASE.y), atBase = G.air.filter(a => a.state === 'base' || a.state === 'service').length;
   g.strokeStyle = '#4fd1e0'; g.lineWidth = 3; g.beginPath(); g.moveTo(b.x - 10, b.y + 6); g.lineTo(b.x + 10, b.y - 6); g.stroke(); g.lineWidth = 1;
   g.fillStyle = '#4fd1e0'; g.font = '11px system-ui'; g.textAlign = 'center'; g.fillText(`✈ Васильків${atBase ? ` (${atBase})` : ''}`, b.x, b.y + 18);
+  const ICON = {energy: '⚡', air: '✈', base: '✈', fuel: '⛽', rail: '🚆', misc: '◆', depot: '📦'};
+  for (const c of G.cities) if (c.t !== 'city') { // обʼєкти інфраструктури і склади
+    const p = P(c.x, c.y), k = c.hp / c.max, col = c.hp <= 0 ? '#777' : k > .6 ? '#ffd54a' : '#ff8a3a';
+    g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.moveTo(p.x, p.y - 8); g.lineTo(p.x + 8, p.y); g.lineTo(p.x, p.y + 8); g.lineTo(p.x - 8, p.y); g.closePath(); g.fill();
+    g.strokeStyle = col; g.lineWidth = 1.5; g.stroke(); g.lineWidth = 1;
+    g.font = '10px system-ui'; g.textAlign = 'center'; g.fillStyle = col; g.fillText(c.hp <= 0 ? '✖' : ICON[c.t], p.x, p.y + 4);
+    if (map.getZoom() >= 8.5 || c.t === 'depot' || k < 1) { g.font = '10px system-ui'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.7)'; g.strokeText(c.name, p.x, p.y + 18); g.fillText(c.name, p.x, p.y + 18); g.lineWidth = 1; }
+  }
   for (const c of G.cities) {
+    if (c.t !== 'city') continue;
     const p = P(c.x, c.y), k = c.hp / c.max, s = c.w > 1 ? 9 : 6;
     if (k < 1 && Math.random() < (1 - k) * rdt * 20) V.parts.push({x: c.x + rnd(-2, 2), y: c.y + rnd(-2, 2), vx: rnd(-.2, .2), vy: rnd(.6, 1.2), t: 0, life: rnd(2, 4), c: '#555', r: rnd(4, 9), smoke: true});
     g.fillStyle = c.hp <= 0 ? '#555' : k > .6 ? '#5ee08a' : k > .3 ? '#ffb347' : '#ff5a5a';
@@ -1060,7 +1236,7 @@ function drawScene(rdt) {
   }
   for (const s of G.sams) {
     const st = used(s.stock, SAM_MSL), empty = !used(s.load, SAM_MSL) && !st;
-    unit(s, s.d, empty ? '#ff5a5a' : s.reload > 0 ? '#7fa3ab' : '#4fd1e0', 28, `${s.d.name.replace(' ★', '')} ${s.reload > 0 ? '⟳' : sum(s.load)}${st ? '+' + sum(s.stock) : ''}`);
+    unit(s, s.d, empty ? '#ff5a5a' : s.reload > 0 ? '#7fa3ab' : '#4fd1e0', s.d.mobile ? 20 : 28, `${s.d.name.replace(' ★', '')} ${s.reload > 0 ? '⟳' : sum(s.load)}${st ? '+' + sum(s.stock) : ''}${s.hp < 100 ? ` · ${s.hp}%` : ''}`);
     if (s.lock) lockArc(s.lock.e, 1 - s.lock.t / s.lock.t0);
   }
   for (const e of G.enemies) {
@@ -1077,8 +1253,13 @@ function drawScene(rdt) {
     if (a.tgt && a.aimT > 0) lockArc(a.tgt, Math.min(1, a.aimT / 4));
   }
   for (const u of G.uavs) unit(u, u.d, '#5ee08a', Math.max(14, modelPx(u.d)), u.d.name, '#5ee08a', true);
+  for (const b of G.debris) { // уламки, що падають
+    const p = P(b.x, b.y); g.fillStyle = '#bbb'; g.beginPath(); g.arc(p.x, p.y, 2.5, 0, 7); g.fill();
+    if (Math.random() < .3) V.parts.push({x: b.x, y: b.y, vx: 0, vy: .2, t: 0, life: 1.5, c: '#666', r: 3, smoke: true});
+  }
+  for (const s of G.sams) if (s.mv) { const p = P(s.x, s.y), q = P(s.mv.x, s.mv.y); g.strokeStyle = 'rgba(79,209,224,.6)'; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); }
   const sel = V.sel;
-  if (sel && alive(sel) && !['base', 'service'].includes(sel.state)) {
+  if (sel && sel.x != null && alive(sel) && !['base', 'service'].includes(sel.state)) {
     const p = P(sel.x, sel.y); g.strokeStyle = sel.kind === 'enemy' ? '#ff5a5a' : '#ffb347'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, 22, 0, 7); g.stroke(); g.lineWidth = 1;
     const tg = sel.force || sel.tgt;
     if (tg && !tg.dead && sel.kind !== 'enemy') { const q = P(tg.x, tg.y); g.strokeStyle = '#ffb347'; g.setLineDash([6, 4]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); g.beginPath(); g.arc(q.x, q.y, 12, 0, 7); g.stroke(); }
@@ -1116,7 +1297,11 @@ function hud() {
     <span><span class="k">Київ</span> <span class="hp"><i style="width:${kyiv.hp / kyiv.max * 100}%"></i></span></span>
     <span><span class="k">На радарі</span> ${visible}${G.enemies.length > visible ? ` <span class="k">(+${G.enemies.length - visible} поза зоною)</span>` : ''}</span>
     <span><span class="k">Збито</span> ${G.kills} <span class="k">Влучань</span> ${G.leaks}</span>
-    ${G.nextMult < 1 ? `<span style="color:var(--ok)">Наступна хвиля −${Math.round((1 - G.nextMult) * 100)}%</span>` : ''}`;
+    <span><span class="k">Міст зруйновано</span> <b style="color:${lostCities() ? 'var(--bad)' : 'inherit'}">${lostCities()}/${loseLimit()}</b></span>
+    ${(() => { const r = G.alerts.filter(a => a.lvl === 2).length, y = G.alerts.filter(a => a.lvl === 1).length; return r || y ? `<span><span class="k">Тривога</span> <b style="color:var(--bad)">${r}</b>${y ? ` <span style="color:#ffd54a">+${y} загроза</span>` : ''} <span class="k">з ${RAIONS.length}</span></span>` : '<span class="k">Тривоги немає</span>'; })()}
+    ${G.strikes.length ? `<span style="color:var(--ok)">Ударів у польоті: ${G.strikes.length}</span>` : ''}
+    ${SITES.filter(s => G.siteMult[s.id] < 1).map(s => `<span style="color:var(--ok)">${s.name.split(' ')[0]} −${Math.round((1 - G.siteMult[s.id]) * 100)}%</span>`).join(' ')}`;
+  paintAlerts();
   $('startWave').classList.toggle('hidden', G.phase !== 'deploy' || G.wave >= WAVES.length);
   $('startWave').textContent = `▶ Почати хвилю ${G.wave + 1}`;
   updateCards();
