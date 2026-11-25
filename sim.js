@@ -845,8 +845,14 @@ function byCheck(o, name, dt) {
   }
   o.byIn = null;
   const dd = edgeDist(BY_XY, o);
-  if (dd < 15 && !o.byWarn) { o.byWarn = true; snd('warn'); say(`⚠ ${name}: до кордону з Білоруссю ${Math.round(dd)} км. Далі — зона ППО противника, вас зіб'ють!`, 'warn'); }
-  else if (dd > 25) o.byWarn = false;
+  // двоступеневе попередження: 25 км — увага, 10 км — «обережно» з банером і голосом
+  if (dd < 25 && !o.byNear) { o.byNear = true; say(`ℹ ${name}: до кордону з Білоруссю ${Math.round(dd)} км.`, 'warn'); }
+  if (dd < 10 && !o.byWarn) {
+    o.byWarn = true; snd('warn'); emit('caution', name, Math.round(dd));
+    say(`⚠ ОБЕРЕЖНО! ${name}: ${Math.round(dd)} км до кордону з Білоруссю. Далі — зона ППО противника, вас зіб'ють! Розверніться.`, 'bad');
+  }
+  if (dd > 15) o.byWarn = false;
+  if (dd > 30) o.byNear = false;
   return false;
 }
 function shotDownBY(o, name) {
