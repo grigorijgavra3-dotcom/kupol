@@ -36,9 +36,9 @@ button.on{border-color:var(--acc);color:var(--acc)}
 #codex.screen{width:min(1150px,94vw);margin:0 auto}
 #settings.screen{width:min(560px,92vw)}
 .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
 .cx{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;gap:10px;background:#0e1a1e}
-.cx canvas{flex:none;width:110px;height:110px;background:radial-gradient(#33402f,#1d2620);border-radius:6px}
+.cx canvas{flex:none;width:160px;height:160px;background:radial-gradient(#33402f,#1d2620);border-radius:6px}
 .cx>div{flex:1;min-width:0}
 .cx b{display:block;margin-bottom:2px}
 .cx table{font-size:12px;border-collapse:collapse;width:100%}
@@ -149,7 +149,7 @@ button.on{border-color:var(--acc);color:var(--acc)}
   <div class="screen hidden" id="codex">
     <h2>Довідник техніки <button class="x" data-go="main" title="Закрити">✕</button></h2>
     <div class="tabs" id="cxTabs"></div>
-    <div class="note">3D-моделі зібрані за реальними розмірами. Власні 3D-моделі (.glb) кладіть у папку <b>models/</b> як <b>id.glb</b> і перелічуйте в <b>models/index.json</b>, напр. ["mig29"] або {"mig29":{"rot":90}} — масштаб підбереться за реальною довжиною. Свої PNG (вид зверху, ніс угору, прозорий фон) можна покласти в папку <b>sprites/</b> з назвою <b>id.png</b> (id вказано в картці) і перелічити id у <b>sprites/index.json</b>, напр. ["mig29","shahed"] — гра покаже їх замість малюнка. «~» — публічні оцінки, на сторінках Вікіпедії їх не було. «★» — немає в переліку сторінки ППО.</div>
+    <div class="note">3D-моделі — справжні моделі зі Sketchfab (CC BY, автор вказаний у картці) або зібрані за реальними розмірами. Власні 3D-моделі (.glb) кладіть у папку <b>models/</b> як <b>id.glb</b> і перелічуйте в <b>models/index.json</b>, напр. ["mig29"] або {"mig29":{"rot":90}} — масштаб підбереться за реальною довжиною; ще є "color" (перефарбувати) і "light" (освітлити). Свої PNG (вид зверху, ніс угору, прозорий фон) можна покласти в папку <b>sprites/</b> з назвою <b>id.png</b> (id вказано в картці) і перелічити id у <b>sprites/index.json</b>, напр. ["mig29","shahed"] — гра покаже їх замість малюнка. «~» — публічні оцінки, на сторінках Вікіпедії їх не було. «★» — немає в переліку сторінки ППО.</div>
     <div class="grid" id="cxGrid"></div>
   </div>
   <div class="screen hidden" id="pause">
@@ -255,6 +255,8 @@ const MODELS = {
  pysyun:{L:.65,S:.5,paint:'#4b5d6a',out:[[0,0],[.06,.05],[.09,.15],[.09,.45],[.25,.5],[.25,.58],[.09,.56],[.07,.65],[0,.65]],det:[['prop',0,.12]]},
  geran5:{L:6,S:5.5,paint:'#2f3236',out:[[0,0],[.25,.4],[.35,1.2],[.35,2.4],[2.75,3.1],[2.75,3.5],[.35,3.4],[.35,5.3],[1,5.8],[1,6],[0,6]],det:[['circ',0,4.5,.3],['nozzle',0,5.9,.25]]},
  banderol:{L:3,S:1.2,paint:'#4a4f52',out:[[0,0],[.12,.25],[.15,.8],[.15,1.2],[.6,1.5],[.6,1.65],[.15,1.6],[.15,2.7],[.4,2.9],[.4,3],[0,3]],det:[['nozzle',0,2.95,.12]]},
+ kh555:{L:6.04,S:3.1,paint:'#4a5056',out:[[0,0],[.3,.45],[.37,1.6],[.37,2.5],[1.55,3],[1.55,3.3],[.37,3.25],[.37,5.3],[.9,5.8],[.9,6.04],[0,6]],det:[['nozzle',0,6,.25]]},
+ kh59:{L:5.7,S:1.3,paint:'#6a6f63',out:[[0,0],[.15,.3],[.19,1],[.19,2.4],[.65,2.7],[.65,2.9],[.19,2.9],[.19,5.1],[.5,5.5],[.5,5.7],[0,5.7]],det:[['nozzle',0,5.65,.15]]},
  kh22:{L:11.67,S:3,paint:'#b9bcbf',out:[[0,0],[.25,1.2],[.46,3],[.46,5.5],[1.5,8],[1.5,9],[.46,9],[.46,10.8],[1.2,11.4],[1.2,11.67],[0,11.67]],det:[['nozzle',0,11.6,.4]]},
 };
 const modelOf = d => MODELS[d.model || d.id];
@@ -690,7 +692,119 @@ const G3 = (() => {
     for (const [id, n] of Object.entries(o.load || {})) for (let k = 0; k < n && j >= i; k++) put(mslObj(id), slots[j--], (MSL3[id]?.[1] || .15) / 2 + .12);
     return grp;
   }
-  const tp = id => tmpl[id] ||= build(MODELS[id]);
+  // ===== Детальні моделі техніки, для якої немає вільних 3D-моделей (за реальними пропорціями, метри) =====
+  // Осі: +Y — вперед (ніс/кабіна), +Z — вгору, земля на z = 0; центр — посередині довжини.
+  const KIT = (() => {
+    const M = (c, r = .7, mt = .15) => new T.MeshStandardMaterial({color: c, roughness: r, metalness: mt});
+    const olive = M(0x56603f), oliveD = M(0x454d33), tyre = M(0x1b1b1b, .9, 0), rim = M(0x3a3f33, .6, .3), steel = M(0x5a5e60, .45, .5),
+      glassK = new T.MeshStandardMaterial({color: 0x1d3548, roughness: .15, metalness: .6}), lampM = M(0xe8e4c8, .3, .1), canM = M(0x6a7352), white = M(0xdedbd2, .5, .1);
+    const mesh = (g, mt, x = 0, y = 0, z = 0, p) => { const me = new T.Mesh(g, mt); me.position.set(x, y, z); (p || this_).add(me); return me; };
+    let this_ = null;
+    const box = (w, l, h, mt, x, y, z, p) => mesh(new T.BoxGeometry(w, l, h), mt, x, y, z + h / 2, p);
+    const cyl = (r, len, mt, x, y, z, axis = 'y', p, seg = 16) => { const me = mesh(new T.CylinderGeometry(r, r, len, seg), mt, x, y, z, p); if (axis === 'x') me.rotation.z = Math.PI / 2; if (axis === 'z') me.rotation.x = Math.PI / 2; return me; };
+    // колесо з шиною, диском і маточиною
+    const wheel = (x, y, r, w) => { cyl(r, w, tyre, x, y, r, 'x'); cyl(r * .62, w + .02, rim, x, y, r, 'x'); cyl(r * .2, w + .06, steel, x, y, r, 'x'); };
+    // кабіна вантажівки: скошене лобове скло, бічні вікна, решітка, фари, бампер
+    function cab(w, l, h, y, z, mt) {
+      const g = new T.Group(); g.position.set(0, y, z); this_.add(g);
+      const sh = new T.Shape([new T.Vector2(-l / 2, 0), new T.Vector2(l / 2, 0), new T.Vector2(l / 2, h * .62), new T.Vector2(l / 2 - l * .22, h), new T.Vector2(-l / 2, h)]);
+      const geo = new T.ExtrudeGeometry(sh, {depth: w, bevelEnabled: true, bevelThickness: .05, bevelSize: .05, bevelSegments: 2});
+      geo.translate(0, 0, -w / 2); geo.rotateX(Math.PI / 2); geo.rotateZ(Math.PI / 2);
+      const body = new T.Mesh(geo, mt); g.add(body);
+      // лобове скло дивиться вперед (+Y) і нахилене назад, як у реальної кабіни
+      const tilt = Math.atan2(l * .22, h * .38), ws = new T.Mesh(new T.PlaneGeometry(w * .86, Math.hypot(l * .22, h * .38) * .85), glassK);
+      ws.position.set(0, l / 2 - l * .11 + .06, h * .81); ws.rotation.x = -Math.PI / 2 + tilt; g.add(ws);
+      for (const sx of [1, -1]) { const sw = new T.Mesh(new T.PlaneGeometry(h * .3, l * .42), glassK); sw.position.set(sx * (w / 2 + .056), -l * .05, h * .78); sw.rotation.y = sx * Math.PI / 2; g.add(sw); }
+      box(w * .7, .04, h * .28, steel, 0, l / 2 + .02, h * .12, g);
+      for (const sx of [1, -1]) box(.28, .05, .16, lampM, sx * w * .38, l / 2 + .03, h * .2, g);
+      box(w + .1, .18, .22, steel, 0, l / 2 + .1, -.05, g);
+      return g;
+    }
+    const chassis = (w, l, y, z) => { for (const sx of [1, -1]) box(.18, l, .3, oliveD, sx * w * .3, y, z); };
+    const wheelsAt = (w, ys, r) => { for (const y of ys) for (const sx of [1, -1]) wheel(sx * (w / 2 - .22), y, r, .42); };
+    function missile(len, d, mt = white, fins = true) {
+      const g = new T.Group(); const b = new T.Mesh(new T.CylinderGeometry(d / 2, d / 2, len * .82, 14), mt); b.position.y = -len * .05; g.add(b);
+      const n = new T.Mesh(new T.ConeGeometry(d / 2, len * .18, 14), mt); n.position.y = len * .45; g.add(n);
+      if (fins) for (const a of [0, Math.PI / 2]) { const f = new T.Mesh(new T.BoxGeometry(d * 2.8, len * .1, .02), mt); f.position.y = -len * .4; f.rotation.y = a; g.add(f); }
+      return g;
+    }
+    const B = {
+      // IRIS-T SLM: пускова на MAN HX 8×8, 8 контейнерів у пакеті 2×4, піднятий у бойове положення
+      iris() {
+        const L = 10, W = 2.55;
+        cab(W, 2.3, 1.75, L / 2 - 1.15, 1.25, olive); chassis(W, L - .6, -.2, .85);
+        box(W, L - 2.6, .5, oliveD, 0, -1.2, 1.05);
+        wheelsAt(W, [L / 2 - 1.6, L / 2 - 3.1, -L / 2 + 2.6, -L / 2 + 1.2], .6);
+        for (const sx of [1, -1]) for (const y of [L / 2 - 2.35, -L / 2 + 1.9]) box(.16, 1.6, .3, olive, sx * (W / 2 + .02), y, 1.25);
+        const pack = new T.Group(); pack.position.set(0, -L / 2 + 1.3, 1.65); pack.rotation.x = .8; this_.add(pack);
+        const pl = 4.6;
+        for (let i = 0; i < 8; i++) { const c = cyl(.24, pl, canM, (i % 4 - 1.5) * .52, pl / 2, (i < 4 ? .28 : .8), 'y', pack, 12); }
+        box(2.3, pl + .1, .08, oliveD, 0, pl / 2, .0, pack); box(2.3, .12, 1.15, oliveD, 0, pl, 0, pack); box(2.3, .12, 1.15, oliveD, 0, .05, 0, pack);
+        for (const sx of [1, -1]) { box(.12, 1.2, .12, steel, sx * .9, -L / 2 + 2, 1.3); const leg = cyl(.08, 1.6, steel, sx * 1.5, -L / 2 + .6, .8, 'z'); leg.rotation.y = sx * .5; box(.4, .4, .06, steel, sx * 1.85, -L / 2 + .6, 0); }
+      },
+      // МВГ: пікап (типу Toyota Hilux) із ЗУ-23-2 у кузові
+      mvg() {
+        const L = 5.3, W = 1.85, hood = 1.35, cabL = 1.65;
+        wheelsAt(W, [L / 2 - .95, -L / 2 + 1.05], .38);
+        box(W, L - .3, .45, olive, 0, 0, .45);
+        const hoodG = new T.Shape([new T.Vector2(-hood / 2, 0), new T.Vector2(hood / 2, 0), new T.Vector2(hood / 2, .32), new T.Vector2(-hood / 2, .42)]);
+        const hg = new T.ExtrudeGeometry(hoodG, {depth: W - .04, bevelEnabled: true, bevelThickness: .04, bevelSize: .04, bevelSegments: 2}); hg.translate(0, 0, -(W - .04) / 2); hg.rotateX(Math.PI / 2); hg.rotateZ(Math.PI / 2);
+        mesh(hg, olive, 0, L / 2 - hood / 2 - .1, .9);
+        const cy = L / 2 - hood - cabL / 2 - .1; box(W - .04, cabL, .25, olive, 0, cy, .9);
+        const roof = box(W - .16, cabL * .62, .08, olive, 0, cy - .12, 1.72);
+        for (const sx of [1, -1]) { box(.06, .08, .62, olive, sx * (W / 2 - .1), cy + cabL / 2 - .12, 1.12); box(.06, .08, .62, olive, sx * (W / 2 - .1), cy - cabL / 2 + .1, 1.12); }
+        const ws = mesh(new T.PlaneGeometry(W - .2, .7), glassK, 0, cy + cabL / 2 - .05, 1.42); ws.rotation.x = -Math.PI / 2 + .55;
+        for (const sx of [1, -1]) { const sw = mesh(new T.PlaneGeometry(.5, cabL * .62), glassK, sx * (W / 2 - .07), cy - .05, 1.42); sw.rotation.y = sx * Math.PI / 2; }
+        const bw = mesh(new T.PlaneGeometry(W - .3, .45), glassK, 0, cy - cabL / 2 + .07, 1.42); bw.rotation.x = Math.PI / 2;
+        for (const sx of [1, -1]) { box(.32, .04, .14, lampM, sx * .62, L / 2 - .06, .82); box(.08, L - hood - cabL - .3, .38, olive, sx * (W / 2 - .04), -L / 2 + (L - hood - cabL - .3) / 2 + .05, .9); }
+        box(W + .06, .14, .2, steel, 0, L / 2, .5); box(W - .1, .06, .38, olive, 0, -L / 2 + .06, .9);
+        // ЗУ-23-2: станок, щити, два стволи, ящики з набоями
+        const zu = new T.Group(); zu.position.set(0, -L / 2 + 1.05, .95); this_.add(zu);
+        cyl(.45, .12, steel, 0, 0, .06, 'z', zu, 18); box(.9, .7, .35, oliveD, 0, 0, .12, zu);
+        const gun = new T.Group(); gun.position.set(0, 0, .55); gun.rotation.x = .45; zu.add(gun);
+        for (const sx of [1, -1]) { cyl(.06, 2.4, steel, sx * .16, 1.1, 0, 'y', gun, 10); cyl(.09, .35, steel, sx * .16, 2.25, 0, 'y', gun, 10); box(.16, .6, .22, oliveD, sx * .16, -.05, -.11, gun); box(.24, .34, .3, oliveD, sx * .42, -.1, -.15, gun); }
+        box(.5, .06, .4, oliveD, 0, .35, -.05, gun);
+        for (const sx of [1, -1]) box(.3, .25, .3, oliveD, sx * .35, -.45, .0, zu);
+      },
+      // Crotale NG: шасі 6×6, башта з РЛС і двома пакетами по 4 ракети
+      crotale() {
+        const L = 6.6, W = 2.6;
+        cab(W, 1.9, 1.3, L / 2 - .95, 1.05, olive); chassis(W, L - .5, -.2, .75);
+        box(W, L - 2.1, 1.0, olive, 0, -1.05, 1.0);
+        wheelsAt(W, [L / 2 - 1.2, -L / 2 + 2.2, -L / 2 + 1], .55);
+        const tur = new T.Group(); tur.position.set(0, -1.3, 2.0); this_.add(tur);
+        cyl(.8, .25, oliveD, 0, 0, .12, 'z', tur, 20); box(1.0, 1.1, 1.0, olive, 0, 0, .25, tur);
+        const dish = cyl(.42, .12, white, 0, .25, 1.55, 'y', tur, 20); box(.08, .08, .3, steel, 0, .1, 1.25, tur);
+        for (const sx of [1, -1]) { const pod = new T.Group(); pod.position.set(sx * .95, 0, .75); pod.rotation.x = .25; tur.add(pod);
+          for (let i = 0; i < 4; i++) cyl(.11, 2.3, canM, sx * ((i % 2) * .26 - .13 + sx * .05), 0, (i < 2 ? -.15 : .15), 'y', pod, 10); }
+      },
+      // С-200: стартова позиція 5П72 — поворотна основа, напрямна і ракета В-880 з 4 прискорювачами
+      s200() {
+        cyl(1.9, .35, oliveD, 0, -1.5, .18, 'z', null, 24); box(2.4, 2.8, .5, olive, 0, -1.6, .35);
+        const arm = new T.Group(); arm.position.set(0, -2.2, 1.4); arm.rotation.x = .55; this_.add(arm);
+        box(.5, 9.5, .35, olive, 0, 4.3, -.2, arm); for (const sx of [1, -1]) { const st = box(.18, .25, 1.9, steel, sx * .55, -2.3 + 2.2, -1.55); st.rotation.x = .3; }
+        const m = new T.Group(); m.position.set(0, 4.6, .55); arm.add(m);
+        const body = missile(10.8, .86, white, false); m.add(body);
+        for (const a of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) { const b = missile(4.9, .55, white, false); b.position.set(Math.cos(a) * .7, -3.2, Math.sin(a) * .7); m.add(b);
+          const f = new T.Mesh(new T.BoxGeometry(.03, 1.2, 1.4), white); f.position.set(Math.cos(a) * 1.25, -5.3, Math.sin(a) * 1.25); f.rotation.y = -a; m.add(f); }
+        for (const a of [Math.PI / 4, Math.PI * .75, Math.PI * 1.25, Math.PI * 1.75]) { const f = new T.Mesh(new T.BoxGeometry(.03, 1.7, 1.6), white); f.position.set(Math.cos(a) * .9, .6, Math.sin(a) * .9); f.rotation.y = -a; m.add(f); }
+      },
+      // Skyguard Aspide: причіп з аутригерами, башта з 4 контейнерами
+      aspide() {
+        const L = 7, W = 2.4;
+        box(W, 4.6, .6, olive, 0, -.6, .7); box(.18, 2.2, .18, steel, 0, 2.6, .6); cyl(.12, .3, steel, 0, 3.6, .6, 'z');
+        wheelsAt(W, [-.6, -1.7], .5);
+        for (const sx of [1, -1]) for (const y of [1.2, -2.6]) { const a = box(1.6, .16, .14, steel, sx * 1.6, y, .55); cyl(.22, .06, steel, sx * 2.35, y, .03, 'z'); }
+        const tur = new T.Group(); tur.position.set(0, -.6, 1.3); this_.add(tur);
+        cyl(.7, .3, oliveD, 0, 0, .15, 'z', tur, 20); box(.9, .9, .9, olive, 0, 0, .3, tur);
+        const pack = new T.Group(); pack.position.set(0, 0, 1.05); pack.rotation.x = .3; tur.add(pack);
+        for (let i = 0; i < 4; i++) { cyl(.24, 3.9, canM, (i % 2 ? .62 : -.62), .3, (i < 2 ? -.27 : .27), 'y', pack, 12); }
+        box(.3, 3.9, .08, oliveD, .62, .3, -.04, pack); box(.3, 3.9, .08, oliveD, -.62, .3, -.04, pack);
+      },
+    };
+    return {has: id => !!B[id], build(id) { const g = new T.Group(); this_ = g; B[id](); this_ = null; const root = new T.Group(); root.add(g); g.traverse(o => { if (o.isMesh) o.castShadow = false; }); return root; }};
+  })();
+  const tp = id => tmpl[id] ||= KIT.has(id) ? KIT.build(id) : build(MODELS[id]);
   const live = new Map(), qT = new T.Quaternion().setFromAxisAngle(V(1, 0, 0), -.55), qY = new T.Quaternion(), qR = new T.Quaternion(), AZ = V(0, 0, 1), AY = V(0, 1, 0);
   let frame = 0;
   function place(o, m, px, off, bankMax, now) {
@@ -701,7 +815,7 @@ const G3 = (() => {
       r.g.traverse(c => { if (c.userData.spin) r.spin.push(c); if (c.userData.flame) r.flames.push(c); }); scene.add(r.g, r.sh); live.set(o, r);
     }
     r.f = frame;
-    if (o.kind === 'air') {
+    if (o.kind === 'air' && !m.glb) { // у справжніх моделей підвіска вже змодельована
       const sig = JSON.stringify(o.load) + o.ptb; // перевісити ракети/баки, коли змінилась підвіска
       if (r.sig !== sig) { r.sig = sig; if (r.stores) r.g.remove(r.stores); r.stores = stores(m, o); r.g.add(r.stores); }
       const ab = o.state === 'intercept';
@@ -728,10 +842,23 @@ const G3 = (() => {
       const m = MODELS[id]; if (!m) continue;
       loader.load(`models/${cfg.file || id + '.glb'}`, gl => {
         const inner = gl.scene, w = new T.Group(), root = new T.Group();
+        // у сцені гри немає відображень оточення — «металеві» матеріали Sketchfab виходили б чорними
+        inner.traverse(o => { if (!o.isMesh) return; for (const mt of [].concat(o.material)) {
+          if (mt.metalness > .3) mt.metalness = .3; mt.roughness = Math.max(.45, mt.roughness ?? 1);
+          if (cfg.light) mt.color?.multiplyScalar(cfg.light);
+          if (cfg.color) { mt.color?.set(cfg.color); if (!cfg.keepMap) mt.map = null; }
+          mt.needsUpdate = true;
+        } });
         inner.applyMatrix4(new T.Matrix4().makeRotationX(Math.PI / 2));
         inner.applyMatrix4(new T.Matrix4().makeRotationZ(Math.PI + (cfg.rot || 0) * Math.PI / 180));
         w.add(inner); const box = new T.Box3().setFromObject(w), sz = box.getSize(V());
         inner.position.sub(box.getCenter(V())); w.scale.setScalar(m.L / (sz.y || 1)); root.add(w);
+        if (cfg.erieye) { // ASC 890: «дошка» радара Erieye над фюзеляжем (на звичайному Saab 340 її немає)
+          const z = -sz.z * m.L / (sz.y || 1) / 2 + 3.6; // верх фюзеляжу ~3,6 м над землею (Saab 340)
+          const rm = new T.MeshStandardMaterial({color: 0xdcdcd4, roughness: .6, metalness: .1}), add = (g, y, zz) => { const me = new T.Mesh(g, rm); me.position.set(0, y, zz); root.add(me); };
+          add(new T.BoxGeometry(.4, 8.6, .78), -1.5, z + .95);
+          for (const yy of [-4.2, -.2]) add(new T.BoxGeometry(.28, .5, .8), yy, z + .3);
+        }
         tmpl[id] = root; m.glb = cfg; // cfg: name/author/license/url — для підпису автора (CC BY вимагає)
         if (menuScreen === 'codex') codex(cxTab);
         if (G) renderCards();
@@ -739,6 +866,7 @@ const G3 = (() => {
     }
   }).catch(() => {});
   return {
+    tpl: id => tmpl[id], // для налагодження
     begin() { frame++; },
     place,
     end() { for (const [o, r] of live) if (r.f !== frame) { scene.remove(r.g, r.sh); live.delete(o); } R.render(scene, cam); },
@@ -748,12 +876,14 @@ const G3 = (() => {
       const c = new T.OrthographicCamera(-D, D, D, -D, -100, 100); c.position.set(D * .4, -D * .7, D); c.up.set(0, 0, 1); c.lookAt(0, 0, 0);
       SR.render(s, c); const x = cv.getContext('2d'); x.clearRect(0, 0, cv.width, cv.height); x.drawImage(SR.domElement, 0, 0, cv.width, cv.height);
     },
-    snap(cv, m) { // знімок 3/4 для довідника й карток
+    snap(cv, m, view) { // знімок 3/4 для довідника й карток (view: 'top' — згори, 'side' — збоку)
       const s = new T.Scene(), obj = tp(m.id).clone(), ad = AIR.find(a => a.id === m.id); lights(s); s.add(obj);
-      if (ad && ad.aam.length) obj.add(stores(m, {load: {[ad.aam[0]]: ad.msl}, ptb: 0})); // показати з типовою підвіскою
+      if (ad && ad.aam.length && !m.glb) obj.add(stores(m, {load: {[ad.aam[0]]: ad.msl}, ptb: 0})); // показати з типовою підвіскою
       const D = Math.max(m.L, m.S) * .62, c = new T.OrthographicCamera(-D, D, D, -D, -100, 100);
-      const sh = new T.Mesh(shadowGeo(m), shadowM); sh.position.z = -Math.max(m.L, m.S) * .2; s.add(sh);
-      c.position.set(D * .5, -D * .9, D * 1.1); c.up.set(0, 0, 1); c.lookAt(0, 0, 0);
+      const sh = new T.Mesh(shadowGeo(m), shadowM); sh.position.z = -Math.max(m.L, m.S) * .2; if (!view) s.add(sh);
+      if (view === 'top') { c.position.set(0, 0, D * 2); c.up.set(0, 1, 0); } else if (view === 'side') { c.position.set(D * 2, 0, 0); c.up.set(0, 0, 1); }
+      else { c.position.set(D * .5, -D * .9, D * 1.1); c.up.set(0, 0, 1); }
+      c.lookAt(0, 0, 0);
       SR.render(s, c); const x = cv.getContext('2d'); x.clearRect(0, 0, cv.width, cv.height); x.drawImage(SR.domElement, 0, 0, cv.width, cv.height);
     },
   };
@@ -866,7 +996,7 @@ function codex(tab) {
   $('cxTabs').querySelectorAll('[data-cx]').forEach(b => b.onclick = () => { AU.click(); codex(b.dataset.cx); });
   if (G3) $('cx3d').onclick = () => { AU.click(); SET.cx3d = !SET.cx3d; saveSet(); codex(tab); if (G) renderCards(); };
   const list = CX[tab][1] || MSL_LIST();
-  $('cxGrid').innerHTML = list.map((d, i) => `<div class="cx"><canvas width="220" height="220" data-i="${i}"></canvas><div><b>${d.name}</b><span class="note">${d.country ? d.country + ' · ' : ''}id: ${d.model || d.id}</span><table>${[...d.info, ...(tab === 'enemy' ? shareRow(d) : []), ...extraRows(d), ...credit(d)].map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table></div></div>`).join('');
+  $('cxGrid').innerHTML = list.map((d, i) => `<div class="cx"><canvas width="320" height="320" data-i="${i}"></canvas><div><b>${d.name}</b><span class="note">${d.country ? d.country + ' · ' : ''}id: ${d.model || d.id}</span><table>${[...d.info, ...(tab === 'enemy' ? shareRow(d) : []), ...extraRows(d), ...credit(d)].map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table></div></div>`).join('');
   $('cxGrid').querySelectorAll('canvas').forEach(cv => drawFit(cv, list[cv.dataset.i]));
 }
 codex('sam');
