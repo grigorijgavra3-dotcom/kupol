@@ -117,9 +117,9 @@ button.on{border-color:var(--acc);color:var(--acc)}
     <div class="tabs" id="diffBtns"></div>
     <div class="note" id="diffNote" style="margin-top:0"></div>
     <div class="vlist">
-      <button class="op" id="opKyiv">1. Оборона Києва<small>Київська область · 8 хвиль · дрони, крилаті й балістичні ракети</small></button>
-      <button class="op" disabled>2. Оборона Харкова<small>Скоро</small></button>
-      <button class="op" disabled>3. Оборона Одеси<small>Скоро</small></button>
+      <button class="op" data-op="kyiv">1. Оборона Києва<small>Київщина · 8 хвиль · дрони з півночі й сходу, крилаті й балістичні ракети · поруч Білорусь</small></button>
+      <button class="op" data-op="odesa">2. Оборона Одеси<small>Одещина · 8 хвиль · дрони над морем, «Калібри», «Онікси», Х-22 · порти й Дунай · поруч Молдова й Румунія</small></button>
+      <button class="op" disabled>3. Оборона Харкова<small>Скоро</small></button>
       <button class="op" disabled>4. Оборона Дніпра<small>Скоро</small></button>
       <button class="op" disabled>5. Оборона Львова<small>Скоро</small></button>
     </div>
@@ -166,7 +166,7 @@ button.on{border-color:var(--acc);color:var(--acc)}
 <div id="hud" class="hidden">
   <div id="top"></div>
   <div id="side">
-    <div class="tabs"><button data-tab="sam" class="on">ППО</button><button data-tab="air">Авіація</button><button data-tab="uav">БпЛА</button><button id="sideMin" title="Згорнути / розгорнути">✕</button></div>
+    <div class="tabs"><button data-tab="sam" class="on">ППО</button><button data-tab="air">Авіація</button><button data-tab="uav">БпЛА</button><button data-tab="radar">РЛС</button><button id="sideMin" title="Згорнути / розгорнути">✕</button></div>
     <div id="cards"></div>
     <div id="hint"></div>
   </div>
@@ -184,6 +184,7 @@ button.on{border-color:var(--acc);color:var(--acc)}
 <div id="balwarn" class="hidden"></div>
 <div id="modal" class="hidden"><div class="screen"><h2 id="mTitle"></h2><div id="mText" class="note" style="font-size:14px"></div><div class="vlist"><button id="mAgain">Ще раз</button><button id="mMenu">Головне меню</button></div></div></div>
 
+<script src="ops.js"></script>
 <script src="sim.js"></script>
 <script>
 'use strict';
@@ -255,6 +256,11 @@ const MODELS = {
  pysyun:{L:.65,S:.5,paint:'#4b5d6a',out:[[0,0],[.06,.05],[.09,.15],[.09,.45],[.25,.5],[.25,.58],[.09,.56],[.07,.65],[0,.65]],det:[['prop',0,.12]]},
  geran5:{L:6,S:5.5,paint:'#2f3236',out:[[0,0],[.25,.4],[.35,1.2],[.35,2.4],[2.75,3.1],[2.75,3.5],[.35,3.4],[.35,5.3],[1,5.8],[1,6],[0,6]],det:[['circ',0,4.5,.3],['nozzle',0,5.9,.25]]},
  banderol:{L:3,S:1.2,paint:'#4a4f52',out:[[0,0],[.12,.25],[.15,.8],[.15,1.2],[.6,1.5],[.6,1.65],[.15,1.6],[.15,2.7],[.4,2.9],[.4,3],[0,3]],det:[['nozzle',0,2.95,.12]]},
+ p18:{L:8,S:2.5,paint:'#5d6a42',out:[[0,0],[1.1,0],[1.25,.3],[1.25,8],[0,8]],det:[['cab',0,2.4],['line',2.4,5.2,-2.4,5.2],['line',2.4,5.8,-2.4,5.8]]},
+ st68:{L:9,S:2.6,paint:'#5f6b45',out:[[0,1.2],[1.3,1.2],[1.3,9],[0,9]],det:[['line',0,0,0,1.2],['circ',0,5,.6],['line',1.6,4.2,-1.6,4.2]]},
+ k80:{L:10,S:2.6,paint:'#56603f',out:[[0,0],[1.1,0],[1.3,.4],[1.3,10],[0,10]],det:[['cab',0,2.6],['line',1.9,6.5,-1.9,6.5],['circ',0,6.5,.4]]},
+ sentinel:{L:6,S:2.4,paint:'#5b6448',out:[[0,1],[1.2,1],[1.2,6],[0,6]],det:[['line',0,0,0,1],['line',1,3.6,-1,3.6],['circ',0,3.6,.3]]},
+ trml:{L:9,S:2.55,paint:'#5a6346',out:[[0,0],[1.1,0],[1.27,.3],[1.27,9],[0,9]],det:[['cab',0,2.4],['line',1.25,6.4,-1.25,6.4],['circ',0,6.4,.4]]},
  kh555:{L:6.04,S:3.1,paint:'#4a5056',out:[[0,0],[.3,.45],[.37,1.6],[.37,2.5],[1.55,3],[1.55,3.3],[.37,3.25],[.37,5.3],[.9,5.8],[.9,6.04],[0,6]],det:[['nozzle',0,6,.25]]},
  kh59:{L:5.7,S:1.3,paint:'#6a6f63',out:[[0,0],[.15,.3],[.19,1],[.19,2.4],[.65,2.7],[.65,2.9],[.19,2.9],[.19,5.1],[.5,5.5],[.5,5.7],[0,5.7]],det:[['nozzle',0,5.65,.15]]},
  kh22:{L:11.67,S:3,paint:'#b9bcbf',out:[[0,0],[.25,1.2],[.46,3],[.46,5.5],[1.5,8],[1.5,9],[.46,9],[.46,10.8],[1.2,11.4],[1.2,11.67],[0,11.67]],det:[['nozzle',0,11.6,.4]]},
@@ -410,7 +416,8 @@ const VOICE = {
   cruise: 'Увага! Високий рівень небезпеки! Зафіксовано пуски крилатих ракет! Негайно прямуйте в укриття!',
   pkr: 'Увага! Високий рівень небезпеки! Загроза надзвукових ракет! Негайно прямуйте в укриття!',
   balwarn: 'Увага! Попередження про можливий пуск балістики.',
-  caution: 'Обережно! Наближення до кордону з Білоруссю. Далі зона протиповітряної оборони противника. Розверніться!',
+  caution: 'Обережно! Наближення до кордону. Далі зона протиповітряної оборони противника. Розверніться!',
+  cautionN: 'Обережно! Наближення до кордону нейтральної держави. Залітати заборонено. Розверніться!',
 };
 function speak(key) {
   if (!SET.voice || !window.speechSynthesis) return;
@@ -491,21 +498,24 @@ L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
   if (n > 2) return; t.dataset.retry = n + 1;
   setTimeout(() => { t.src = n < 2 ? `https://${'abc'[(x + y + n) % 3]}.tile.opentopomap.org/${z}/${x}/${y}.png` : `https://tile.openstreetmap.org/${z}/${x}/${y}.png`; }, 400 * (n + 1));
 }).addTo(map);
-const opMarkers = [['Київ',50.45,30.52,true],['Харків',49.99,36.23],['Одеса',46.48,30.73],['Дніпро',48.46,35.04],['Львів',49.84,24.03]]
+const opMarkers = [['Київ',50.45,30.52,true],['Харків',49.99,36.23],['Одеса',46.48,30.73,true],['Дніпро',48.46,35.04],['Львів',49.84,24.03]]
   .map(([n, a, b, on]) => L.circleMarker([a, b], {radius: on ? 9 : 6, color: on ? '#4fd1e0' : '#7fa3ab', weight: 2, fillOpacity: .4}).bindTooltip(n));
-// область: яскрава межа + затемнення всього, що поза нею
-const oblLayer = L.layerGroup([
-  L.polygon([[[85, -180], [85, 180], [-85, 180], [-85, -180]], OBL_POLY], {stroke: false, fillColor: '#000', fillOpacity: .38, interactive: false}),
-  L.polyline(OBL_POLY, {color: '#000', weight: 6, opacity: .5, interactive: false}),
-  L.polyline(OBL_POLY, {color: '#ffd54a', weight: 3, dashArray: '10 6', interactive: false}),
-]);
-// Білорусь — зона ППО противника; райони — тривоги
-const byLayer = L.layerGroup([
-  L.polygon(BY_POLY, {color: '#ff3b3b', weight: 2, dashArray: '4 6', fillColor: '#ff3b3b', fillOpacity: .12, interactive: false}),
-  L.marker([51.75, 29.2], {interactive: false, icon: L.divIcon({className: '', html: '<div style="color:#ff8a8a;font:bold 12px system-ui;white-space:nowrap;text-shadow:0 0 3px #000">БІЛОРУСЬ — ППО противника</div>'})}),
-]);
-const rLayers = RAIONS.map(r => L.polygon(r.ll, {color: '#4fd1e0', weight: 1, opacity: .45, fillOpacity: 0, interactive: false}).bindTooltip(r.name, {sticky: true}));
-const alertLayer = L.layerGroup(rLayers);
+// шари поточної операції (будуються наново при кожному старті): межа області, заборонені зони, райони для тривог
+let oblLayer = L.layerGroup(), byLayer = L.layerGroup(), rLayers = [], alertLayer = L.layerGroup();
+function buildOpLayers() {
+  for (const l of [oblLayer, byLayer, alertLayer]) l.remove();
+  oblLayer = L.layerGroup([
+    L.polygon([[[85, -180], [85, 180], [-85, 180], [-85, -180]], OBL_POLY], {stroke: false, fillColor: '#000', fillOpacity: .38, interactive: false}),
+    L.polyline(OBL_POLY, {color: '#000', weight: 6, opacity: .5, interactive: false}),
+    L.polyline(OBL_POLY, {color: '#ffd54a', weight: 3, dashArray: '10 6', interactive: false}),
+  ]);
+  byLayer = L.layerGroup(ZONES.flatMap(z => [
+    L.polygon(z.ring, {color: z.hostile ? '#ff3b3b' : '#9fb3c8', weight: 2, dashArray: '4 6', fillColor: z.hostile ? '#ff3b3b' : '#9fb3c8', fillOpacity: z.hostile ? .12 : .1, interactive: false}),
+    L.marker(z.label, {interactive: false, icon: L.divIcon({className: '', html: `<div style="color:${z.hostile ? '#ff8a8a' : '#c8d6e5'};font:bold 12px system-ui;white-space:nowrap;text-shadow:0 0 3px #000">${z.name.toUpperCase()} — ${z.hostile ? 'ППО противника' : 'нейтральна, не залітати'}</div>`})}),
+  ]));
+  rLayers = RAIONS.map(r => L.polygon(r.ll, {color: '#4fd1e0', weight: 1, opacity: .45, fillOpacity: 0, interactive: false}).bindTooltip(r.name, {sticky: true}));
+  alertLayer = L.layerGroup(rLayers);
+}
 const ALC = ['transparent', '#ffd54a', '#ff3b3b'];
 function paintAlerts() {
   if (!G) return;
@@ -565,7 +575,7 @@ const G3 = (() => {
   const uaBlueD = new T.MeshBasicMaterial({color: 0x0057b7, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, side: T.DoubleSide}), uaYellowD = new T.MeshBasicMaterial({color: 0xffd700, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6, side: T.DoubleSide});
   const navR = new T.MeshBasicMaterial({color: 0xff2020}), navG = new T.MeshBasicMaterial({color: 0x20ff40});
   const OWN = new Set([...AIR, ...UAV].map(d => d.id));
-  const VEH = new Set(SAM.map(d => d.id)), tmpl = {}, shGeo = {};
+  const VEH = new Set([...SAM, ...RADAR].map(d => d.id)), tmpl = {}, shGeo = {};
   const shapeOf = m => {
     const s = new T.Shape(), pts = [...m.out, ...m.out.slice().reverse().map(([x, y]) => [-x, y])];
     pts.forEach(([x, y], i) => i ? s.lineTo(x, m.L / 2 - y) : s.moveTo(x, m.L / 2 - y)); return s;
@@ -937,9 +947,46 @@ const G3 = (() => {
         box(.3, 3.9, .08, oliveD, .62, .3, -.04, pack); box(.3, 3.9, .08, oliveD, -.62, .3, -.04, pack);
       },
     };
+    // обертова антена РЛС: група, що крутиться навколо вертикалі (~6 об/хв)
+    const rotor = (y, z, rate = .63) => { const g = new T.Group(); g.position.set(0, y, z); g.userData.spin = 'z'; g.userData.rate = rate; this_.add(g); return g; };
+    const panel = (w, h, d, mt, x, y, z, p, tilt = 0) => { const me = mesh(new T.BoxGeometry(w, d, h), mt, x, y, z, p); me.rotation.x = tilt; return me; };
+    const arrM = M(0x8e9478, .6, .2); arrM.name = 'nocamo';
+    // П-18 «Терек»: «Урал» з кабіною й кунгом, на даху щогла з двома решітками «хвильовий канал»
+    B.p18 = () => {
+      const L = 8, W = 2.5; cab(W, 2.2, 1.6, L / 2 - 1.1, 1.0, olive); chassis(W, L - .4, -.1, .7); wheelsAt(W, [L / 2 - 1.3, -L / 2 + 2.3, -L / 2 + 1.1], .55);
+      box(W, 4.6, 2.0, olive, 0, -1.3, 1.0); cyl(.12, 2.6, steel, 0, -1.3, 4.3, 'z');
+      const r = rotor(-1.3, 5.6);
+      for (const zz of [0, .9]) { box(7.6, .12, .12, steel, 0, 0, zz, r); for (let i = 0; i < 9; i++) box(.06, .9, .06, steel, -3.6 + i * .9, .3, zz + .03, r); }
+      box(.12, .12, 1.0, steel, 0, 0, 0, r);
+    };
+    // 36Д6-М: причіп-апаратна, решітчаста щогла й велика плоска антена
+    B.st68 = () => {
+      const L = 9, W = 2.6; box(W, 6.6, 2.1, olive, 0, -.6, .9); box(.16, 1.6, .16, steel, 0, 3.6, .7); wheelsAt(W, [-2.4, -3.5], .5);
+      for (const [x, y] of [[-.5, 1.6], [.5, 1.6], [-.5, 2.4], [.5, 2.4]]) cyl(.06, 6.5, steel, x, y, 3.25 + .0, 'z');
+      for (let k = 1; k < 6; k++) box(1.1, .9, .06, steel, 0, 2, k * 1.1);
+      const r = rotor(2, 6.6); panel(5.6, 2.6, .25, arrM, 0, 0, 1.2, r, -.25); box(.2, .2, .6, steel, 0, 0, 0, r);
+    };
+    // 80К6М: КрАЗ із кунгом і плоскою антеною, нахиленою назад
+    B.k80 = () => {
+      const L = 10, W = 2.6; cab(W, 2.5, 1.7, L / 2 - 1.25, 1.05, olive); chassis(W, L - .4, -.1, .75); wheelsAt(W, [L / 2 - 1.5, -L / 2 + 2.6, -L / 2 + 1.3], .6);
+      box(W, 5.2, 2.2, olive, 0, -1.6, 1.05); cyl(.5, .3, steel, 0, -1.6, 3.4, 'z');
+      const r = rotor(-1.6, 3.6); panel(6.8, 2.4, .3, arrM, 0, 0, 1.3, r, -.3); for (const sx of [1, -1]) { const b = box(.12, .12, 1.4, steel, sx * 1.5, .3, 0, r); b.rotation.x = .3; }
+    };
+    // AN/MPQ-64 Sentinel: двовісний причіп, плоска квадратна антена
+    B.sentinel = () => {
+      const L = 6, W = 2.4; box(W, 4.2, 1.3, olive, 0, -.4, .7); box(.14, 1.4, .14, steel, 0, 2.4, .6); wheelsAt(W, [-.9, -1.9], .45);
+      for (const sx of [1, -1]) for (const y of [1.3, -2.3]) box(.12, .12, .7, steel, sx * 1.15, y, 0);
+      const r = rotor(-.4, 2.05); cyl(.35, .25, steel, 0, 0, .12, 'z', r); panel(2.2, 1.7, .25, arrM, 0, 0, 1.0, r, -.2);
+    };
+    // TRML-4D: MAN 6×6, квадратна АФАР на підйомній щоглі
+    B.trml = () => {
+      const L = 9, W = 2.55; cab(W, 2.2, 1.7, L / 2 - 1.1, 1.05, olive); chassis(W, L - .4, -.1, .75); wheelsAt(W, [L / 2 - 1.4, -L / 2 + 2.4, -L / 2 + 1.1], .55);
+      box(W, 5.2, 1.9, olive, 0, -1.4, 1.05); cyl(.18, 1.6, steel, 0, -1.4, 3.75, 'z');
+      const r = rotor(-1.4, 4.55); cyl(.45, .2, steel, 0, 0, .1, 'z', r); panel(2.6, 2.6, .35, arrM, 0, 0, 1.4, r, -.2);
+    };
     return {has: id => !!B[id], build(id) { const g = new T.Group(); this_ = g; B[id](); this_ = null; const root = new T.Group(); root.add(g); g.traverse(o => { if (o.isMesh) o.castShadow = false; }); return root; }};
   })();
-  const KIT_CAMO = {iris: 'natoGreen', mvg: 'uaGround', crotale: 'natoGreen', s200: 'uaPixelGreen', aspide: 'natoGreen'};
+  const KIT_CAMO = {iris: 'natoGreen', mvg: 'uaGround', crotale: 'natoGreen', s200: 'uaPixelGreen', aspide: 'natoGreen', p18: 'uaPixelGreen', st68: 'uaPixelGreen', k80: 'uaPixelGreen', sentinel: 'natoGreen', trml: 'natoGreen'};
   const tp = id => tmpl[id] ||= KIT.has(id) ? (r => (applyCamo(r, KIT_CAMO[id], .25), r))(KIT.build(id)) : build(MODELS[id]);
   const live = new Map(), qT = new T.Quaternion().setFromAxisAngle(V(1, 0, 0), -.55), qY = new T.Quaternion(), qR = new T.Quaternion(), AZ = V(0, 0, 1), AY = V(0, 1, 0);
   let frame = 0;
@@ -966,7 +1013,7 @@ const G3 = (() => {
     }
     qY.setFromAxisAngle(AZ, -(o.vr || 0)); qR.setFromAxisAngle(AY, r.bank);
     r.g.quaternion.copy(qT).multiply(qY).multiply(qR); // нахил погляду · курс · крен
-    for (const c of r.spin) c.rotation[c.userData.spin] = now * (c.userData.spin === 'z' ? 25 : 40);
+    for (const c of r.spin) c.rotation[c.userData.spin] = now * (c.userData.rate || (c.userData.spin === 'z' ? 25 : 40));
     r.sh.visible = SET.shadows;
     if (SET.shadows) { r.sh.position.set(p.x + off, -(p.y + off * 1.3), -1500); r.sh.scale.setScalar(k); r.sh.rotation.z = -(o.vr || 0); }
   }
@@ -1049,7 +1096,7 @@ document.querySelectorAll('[data-set]').forEach(inp => {
   if (inp.type === 'checkbox') inp.checked = SET[k]; else inp.value = SET[k];
   inp.oninput = () => { SET[k] = inp.type === 'checkbox' ? inp.checked : +inp.value; saveSet(); AU.apply(); };
 });
-$('opKyiv').onclick = () => { AU.click(); startOp(); };
+document.querySelectorAll('[data-op]').forEach(b => b.onclick = () => { AU.click(); startOp(b.dataset.op); });
 // ================= РОЗШИРЕНІ НАЛАШТУВАННЯ =================
 // Шанс ураження для кожної ракети/набою по БпЛА, КР і БР; порожнє поле — стандартне значення.
 const KN = {drone: 'БпЛА', cruise: 'КР', bal: 'БР'};
@@ -1124,7 +1171,7 @@ const MSL_LIST = () => [
 ];
 const pkText = m => ['drone', 'cruise', 'bal'].filter(k => k !== 'bal' || m.bm).map(k => `${KN[k]} ${Math.round(pkDefault(m, k) * 100)}%`).join(' · ');
 const shareRow = d => d.w ? [['Частка пусків', `~${d.w < 1 ? d.w.toFixed(1).replace('.', ',') : Math.round(d.w)}% (за рік)`]] : d.recon ? [['Частка пусків', 'розвідник, 0–5 на хвилю']] : [];
-const CX = {sam: ['ППО', SAM], air: ['Авіація', AIR], uav: ['БпЛА', UAV], enemy: ['Противник', Object.values(ENEMY)], msl: ['Ракети', null]};
+const CX = {sam: ['ППО', SAM], radar: ['РЛС', RADAR], air: ['Авіація', AIR], uav: ['БпЛА', UAV], enemy: ['Противник', Object.values(ENEMY)], msl: ['Ракети', null]};
 let cxTab = 'sam';
 const credit = d => { const g = modelOf(d)?.glb; return g ? [['3D-модель', `<a href="${g.url}" target="_blank" rel="noopener" style="color:var(--acc)">${g.name}</a> — ${g.author}, ${g.license}`]] : []; };
 function codex(tab) {
@@ -1145,9 +1192,10 @@ codex('sam');
 let V = null;
 // усі дії гравця йдуть сюди; у мережевій грі ця функція відправлятиме команду на сервер
 const cmd = c => command(c);
-function startOp() {
-  show(null);
-  G = newGame(SET.diff, advOpt());
+let lastOp = 'kyiv';
+function startOp(op = lastOp) {
+  show(null); lastOp = op;
+  G = newGame(SET.diff, advOpt(), op); buildOpLayers();
   V = {speed: 30, lastSpeed: 30, paused: false, tab: 'sam', pending: null, cursor: null, sel: null, selMin: false, log: [], booms: [], parts: [], tracers: [], shake: 0, flash: 0};
   $('hud').classList.remove('hidden'); $('sel').classList.add('hidden'); $('log').innerHTML = '';
   document.querySelectorAll('#side [data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === 'sam'));
@@ -1157,6 +1205,7 @@ function startOp() {
   oblLayer.addTo(map); byLayer.addTo(map); alertLayer.addTo(map); $('balwarn').classList.add('hidden');
   setSpeed(30); renderCards();
   logMsg('Розгорніть ППО: комплекс праворуч → клік по карті. Час іде в 30× від реального (1× — реальний).', 'warn');
+  logMsg('Порада: поставте РЛС (вкладка «РЛС») — вона бачить далеко й дає ППО цілевказівку. Без РЛС комплекси захоплюють ціль повільніше.', 'warn');
 }
 function toMenu() {
   G = null; V = null; $('hud').classList.add('hidden'); oblLayer.remove(); byLayer.remove(); alertLayer.remove(); $('balwarn').classList.add('hidden');
@@ -1182,7 +1231,7 @@ function drainEvents() {
       if (a === 'high') { speak(b); danger(b === 'bal' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — БАЛІСТИКА' : b === 'pkr' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — НАДЗВУКОВІ РАКЕТИ' : '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — КРИЛАТІ РАКЕТИ'); AU.siren(); }
       else speak(a);
     } else if (type === 'balwarn') balWarn(a, b);
-    else if (type === 'caution') { speak('caution'); danger(`⚠ ОБЕРЕЖНО! ${a}: ${b} км до кордону з Білоруссю — далі ППО противника!`, true); }
+    else if (type === 'caution') { speak(d ? 'caution' : 'cautionN'); danger(`⚠ ОБЕРЕЖНО! ${a}: ${b} км до кордону з ${c || 'сусідньою державою'} — ${d ? 'далі ППО противника!' : 'далі нейтральний простір, не залітати!'}`, true); }
   }
   G.out.length = 0;
 }
@@ -1198,7 +1247,7 @@ function balWarn(dir, type) {
 function endScreen(win) {
   V.paused = true;
   $('mTitle').textContent = win ? 'Операцію виконано' : 'Оборону прорвано';
-  $('mText').innerHTML = `Хвиль: ${G.wave}/${WAVES.length}<br>Збито: ${G.kills}<br>Влучань: ${G.leaks}<br>Витрачено: ${G.spent} ⛁<br>Стан Києва: ${Math.round(G.cities[0].hp / G.cities[0].max * 100)}%<br>Зруйновано міст: ${lostCities()} (межа ${loseLimit()})<br>Виведено з ладу обʼєктів: ${G.cities.filter(c => c.t !== 'city' && c.hp <= 0).length}`;
+  $('mText').innerHTML = `Хвиль: ${G.wave}/${WAVES.length}<br>Збито: ${G.kills}<br>Влучань: ${G.leaks}<br>Витрачено: ${G.spent} ⛁<br>Стан м. ${G.cities[0].name}: ${Math.round(G.cities[0].hp / G.cities[0].max * 100)}%<br>Зруйновано міст: ${lostCities()} (межа ${loseLimit()})<br>Виведено з ладу обʼєктів: ${G.cities.filter(c => c.t !== 'city' && c.hp <= 0).length}`;
   $('modal').classList.remove('hidden');
   if (win) AU.chime(); else AU.impact();
 }
@@ -1243,11 +1292,11 @@ addEventListener('keydown', e => {
 
 // ================= CARDS (права панель) =================
 const ROLE = {fighter: 'винищувач', hunter: 'мисливець на дрони', strike: 'ударний', recon: 'розвідка', interceptor: 'перехоплювач', kamikaze: 'удар по пускових', awacs: 'ДРЛО (радар 350 км)'};
-const defs = () => V.tab === 'sam' ? SAM : V.tab === 'air' ? AIR : UAV;
+const defs = () => V.tab === 'sam' ? SAM : V.tab === 'air' ? AIR : V.tab === 'radar' ? RADAR : UAV;
 const owned = d => G.air.filter(a => a.d === d);
 function renderCards() {
   $('cards').innerHTML = defs().map(d => `<div class="card" data-id="${d.id}"><canvas width="80" height="80" style="width:40px;height:40px"></canvas><div><b>${d.name}</b><small>${
-    V.tab === 'sam' ? `до ${samRange(d)} км · ${d.bm ? 'ППО+ПРО' : d.mobile ? 'мобільна' : 'ППО'}` : ROLE[d.role] + (d.msl ? ` · до ${d.msl} ракет` : '')
+    V.tab === 'sam' ? `до ${samRange(d)} км · ${d.bm ? 'ППО+ПРО' : d.mobile ? 'мобільна' : 'ППО'}` : V.tab === 'radar' ? `${d.det} км · антена ${d.ant} м` : ROLE[d.role] + (d.msl ? ` · до ${d.msl} ракет` : '')
   }</small></div><span class="badge"></span></div>`).join('');
   $('cards').querySelectorAll('.card').forEach(el => {
     const d = defs().find(x => x.id === el.dataset.id);
@@ -1271,7 +1320,7 @@ function updateCards() {
     el.classList.toggle('sel', V.pending?.d === d);
   });
   const p = V.pending;
-  $('hint').textContent = p ? `Клік по карті — ${p.kind === 'sam' ? 'розгорнути' : 'запустити'} ${p.d.name}. Esc — скасувати.`
+  $('hint').textContent = p ? `Клік по карті — ${p.kind === 'uav' ? 'запустити' : 'розгорнути'} ${p.d.name}. Esc — скасувати.`
     : 'Клік по своєму юніту — вибір. Клік по цілі — що це. Пробіл — пауза.';
 }
 function cardClick(d) {
@@ -1296,12 +1345,13 @@ function pickAt(cp, onlyEnemy) {
   G.enemies.forEach(e => e.det && test(e, 'enemy'));
   if (onlyEnemy) return best;
   G.sams.forEach(s => test(s, 'unit'));
+  G.radars.forEach(r => test(r, 'unit'));
   G.air.forEach(a => a.state !== 'base' && a.state !== 'service' && test(a, 'unit'));
   G.uavs.forEach(u => u.state !== 'strike' && test(u, 'unit'));
   if (!best && !myUnit(V.sel)) { bd = 10; G.cities.forEach(c => test(c, 'city')); }
   return best;
 }
-const myUnit = u => u && ['sam', 'air', 'uav'].includes(u.kind);
+const myUnit = u => u && ['sam', 'air', 'uav', 'radar'].includes(u.kind);
 function select(u) { V.sel = u; V.pending = null; renderSel(); updateCards(); }
 map.on('mousemove', e => { if (V) V.cursor = toXY(e.latlng.lat, e.latlng.lng); });
 map.on('click', e => {
@@ -1309,7 +1359,7 @@ map.on('click', e => {
   const pt = toXY(e.latlng.lat, e.latlng.lng);
   if (V.pending) {
     const {kind, d} = V.pending, u = cmd({t: 'place', kind, def: d.id, ...pt});
-    if (kind === 'sam' && u) { AU.click(); select(u); return; }
+    if ((kind === 'sam' || kind === 'radar') && u) { AU.click(); select(u); return; }
     if (G.res < d.cost) V.pending = null;
     updateCards(); return;
   }
@@ -1317,7 +1367,7 @@ map.on('click', e => {
   if (myUnit(V.sel) && en) { cmd({t: 'assign', unit: V.sel.id, target: en.o.id}); AU.click(); return; }
   if (hit) { select(hit.o); AU.click(); return; }
   const u = V.sel;
-  if (u && ((u.kind === 'air' && u.d.role !== 'strike') || (u.kind === 'uav' && u.d.role !== 'kamikaze') || (u.kind === 'sam' && u.d.mobile))) { cmd({t: 'move', unit: u.id, ...pt}); AU.click(); }
+  if (u && ((u.kind === 'air' && u.d.role !== 'strike') || (u.kind === 'uav' && u.d.role !== 'kamikaze') || ((u.kind === 'sam' || u.kind === 'radar') && u.d.mobile))) { cmd({t: 'move', unit: u.id, ...pt}); AU.click(); }
   else select(null);
 });
 
@@ -1325,7 +1375,7 @@ map.on('click', e => {
 const STATE = {base: 'на базі', service: 'дозаправка й дозарядка', move: 'в польоті', patrol: 'патрулювання', intercept: 'перехоплення', rtb: 'повертається на базу', strikeOut: 'летить на удар'};
 const chips = (u, kinds) => `<div class="btns">${kinds.map(k => `<button class="chip ${u.filt[k] ? 'on' : ''}" data-act="f:${k}">${KIND[k]}</button>`).join('')}</div>`;
 const bar = (k, col = 'var(--acc)') => `<div class="bar"><i style="width:${Math.max(0, Math.min(1, k)) * 100}%;background:${col}"></i></div>`;
-function alive(u) { return u && (u.kind === 'strikepick' || (u.kind === 'sam' ? G.sams : u.kind === 'air' ? G.air : u.kind === 'enemy' ? G.enemies : u.t ? G.cities : G.uavs).includes(u)); }
+function alive(u) { return u && (u.kind === 'strikepick' || (u.kind === 'sam' ? G.sams : u.kind === 'radar' ? G.radars : u.kind === 'air' ? G.air : u.kind === 'enemy' ? G.enemies : u.t ? G.cities : G.uavs).includes(u)); }
 const KIND_OBJ = {city: 'населений пункт', energy: 'енергетика', air: 'аеропорт', base: 'ваш аеродром', fuel: 'нафтобаза', rail: 'залізничний вузол', misc: 'обʼєкт', depot: 'склад озброєння'};
 const siteBtns = (act, d) => `<div class="sites">${SITES.map(s => `<button data-act="${act}:${s.id}"><b>${s.name}</b> <span class="k">~${s.km} км · ${Math.round(s.km / (d.cruise || 1000) * 60 + (d.cruise ? 0 : 10))} хв · пусків з напрямку ${s.dirs.join('/')}${G.siteMult[s.id] < 1 ? ` · вже −${Math.round((1 - G.siteMult[s.id]) * 100)}%` : ''}</span></button>`).join('')}</div>`;
 const selBtns = () => `<span style="display:flex;gap:4px"><button data-act="min" title="Згорнути / розгорнути">${V.selMin ? '▴' : '▾'}</button><button data-act="close" title="Закрити">✕</button></span>`;
@@ -1346,7 +1396,7 @@ function renderSel() {
     h += `<div><span class="k">Тип:</span> ${KIND_OBJ[u.t]}</div><div class="k">Стан ${Math.round(u.hp / u.max * 100)}%</div>${bar(u.hp / u.max, u.hp / u.max > .5 ? 'var(--ok)' : 'var(--bad)')}`;
     if (u.t === 'depot') h += `<div>Постачає: ${SUP_NAME[u.sup]}${u.hp <= 0 ? ` · <span style="color:var(--bad)">знищено, відновлення через ${u.down} хвил.</span>` : ''}</div>`;
     else if (u.t !== 'city') h += `<div class="k">Якщо зруйнують: ${OBJ_INFO[u.t]}</div>`;
-    else h += `<div class="k">Зруйновано міст: ${lostCities()} з ${loseLimit()} допустимих (і Київ має вистояти).</div>`;
+    else h += `<div class="k">Зруйновано міст: ${lostCities()} з ${loseLimit()} допустимих (і ${G.cities[0].name} має вистояти).</div>`;
     if (u.t !== 'city' && u.hp < u.max) h += `<div class="btns"><button data-act="repair">Відновити зараз (${u.t === 'depot' ? 30 : 20} ⛁)</button></div>`;
     el.innerHTML = h; return;
   }
@@ -1356,7 +1406,7 @@ function renderSel() {
     if (V.selMin) { el.innerHTML = h; return; }
     h += u.ident ? `<div style="color:var(--ok)">Ідентифіковано</div>` : `<div class="k">Не ідентифіковано: підведіть розвідника, літак або перехоплювач ближче ніж на 15 км (ППО — 8 км).</div>`;
     h += `<table><tr><td>Швидкість</td><td>${Math.round(v)} км/год</td></tr><tr><td>Висота</td><td>${u.alt >= 1 ? u.alt.toFixed(1) + ' км' : Math.round(u.alt * 1000) + ' м'}</td></tr>
-      <tr><td>До Києва</td><td>${Math.round(dist(u, kyiv))} км</td></tr>
+      <tr><td>До м. ${kyiv.name}</td><td>${Math.round(dist(u, kyiv))} км</td></tr>
       ${u.def.recon && u.ident ? '<tr><td>Мета</td><td>розвідка ваших ППО</td></tr>' : u.city && u.ident ? `<tr><td>Ймовірна ціль</td><td>${u.city.name}, ~${Math.max(1, Math.round(eta / 60))} хв</td></tr>` : ''}
       ${u.samT ? `<tr><td>Ціль</td><td style="color:var(--bad)">позиція ${u.samT.d.name}</td></tr>` : ''}
       ${u.ident ? u.def.info.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('') : ''}</table>`;
@@ -1365,6 +1415,17 @@ function renderSel() {
   }
   h = `<h3>${d.name}${selBtns()}</h3>`;
   if (V.selMin) { el.innerHTML = h; return; }
+  if (u.kind === 'radar') {
+    const linked = G.sams.filter(s => dist(s, u) <= LINK_KM).length, seen = G.enemies.filter(e => e.seen?.includes(u)).length;
+    h += `<div><span class="k">Стан:</span> ${u.mv ? 'переїзд' : u.on ? '<span style="color:var(--ok)">випромінює</span>' : '<span style="color:var(--warn)">тихий режим</span>'} · <span class="k">бачить цілей:</span> ${seen}</div>`;
+    h += `<table><tr><td>Дальність</td><td>${d.det} км (малі дрони — ${Math.round(d.det * d.small)} км)</td></tr><tr><td>Антена</td><td>${d.ant} м — КР на 50 м видно з ~${Math.round(Math.min(d.det, horizon(.05, d.ant)))} км</td></tr>
+      <tr><td>Цілевказівка</td><td>ППО в радіусі ${LINK_KM} км (${linked}) захоплює ціль у ${(1 / d.cue).toFixed(1)} раза швидше</td></tr></table>`;
+    if (u.hp < 100) h += `<div class="k">Стан позиції ${u.hp}%</div>${bar(u.hp / 100, 'var(--bad)')}`;
+    if (u.on) h += `<div class="k" style="color:var(--warn)">Випромінює — розвідники й частина дронів можуть навестися на неї.</div>`;
+    h += `<div class="btns"><button class="chip ${u.on ? 'on' : ''}" data-act="emit">${u.on ? 'Випромінювання: увімк.' : 'Тихий режим'}</button>${u.mv ? '<button data-act="stop">Стоп</button>' : ''}</div>`;
+    h += `<div class="k">Клік по карті — переїхати (${d.speed} км/год, 1 ⛁).</div><div class="btns"><button data-act="sell">Демонтувати (+${Math.round(d.cost / 2 * u.hp / 100)} ⛁)</button></div>`;
+    el.innerHTML = h; return;
+  }
   if (u.kind === 'sam') {
     h += `<div><span class="k">ПУ</span> ${used(u.load, SAM_MSL)}/${d.cap} місць · <span class="k">резерв</span> ${used(u.stock, SAM_MSL)}/${d.cap * 2} · <span class="k">реакція</span> ${d.react} с</div>`;
     if (u.hp < 100) h += `<div class="k">Стан позиції ${u.hp}%${u.hp < 50 ? ' — реакція вдвічі повільніша' : ''}</div>${bar(u.hp / 100, 'var(--bad)')}`;
@@ -1445,7 +1506,7 @@ function unit(o, d, edge, px, text, color, airborne) {
   const off = airborne ? Math.min(10, 3 + (o.alt || 1) * 2) : 1.5;
   const rr = o.rot || 0; if (o.vr == null) o.vr = rr; // візуальний поворот без ривків (напр. ПУ на ціль)
   o.vr += Math.max(-.12, Math.min(.12, ((rr - o.vr + Math.PI * 3) % (Math.PI * 2)) - Math.PI));
-  const cat = o.kind === 'sam' ? 'sam' : o.kind === 'air' ? (o.d.heli ? 'heli' : 'air') : o.kind === 'uav' ? 'uav' : 'enemy';
+  const cat = o.kind === 'sam' || o.kind === 'radar' ? 'sam' : o.kind === 'air' ? (o.d.heli ? 'heli' : 'air') : o.kind === 'uav' ? 'uav' : 'enemy';
   if (G3 && SET['v3_' + cat]) {
     const bank = o.kind === 'air' ? (o.d.heli ? .3 : 1) : o.kind === 'enemy' ? (o.def.kind === 'bal' ? 0 : o.def.kind === 'cruise' ? .4 : .5) : o.kind === 'uav' ? .5 : 0;
     G3.place(o, m, px * 1.15, off, bank, t);
@@ -1472,6 +1533,10 @@ function drawScene(rdt) {
       if (r) circle(s.x, s.y, r, s === V.sel ? 'rgba(255,179,71,.95)' : 'rgba(79,209,224,.9)', 'rgba(79,209,224,.08)', [8, 4]);
       else circle(s.x, s.y, samRange(s.d), 'rgba(255,90,90,.6)', null, [2, 6]);
     }
+    for (const r of G.radars) {
+      circle(r.x, r.y, r.d.det, r.on ? 'rgba(200,140,255,.55)' : 'rgba(200,140,255,.2)', r === V.sel ? 'rgba(200,140,255,.06)' : null, [3, 7]);
+      if (r.on) circle(r.x, r.y, Math.min(r.d.det, horizon(.05, r.d.ant)), 'rgba(200,140,255,.35)', null, [1, 5]); // межа видимості КР на 50 м
+    }
     for (const u of G.uavs) {
       if (u.d.role === 'recon') circle(u.x, u.y, u.d.sensor, 'rgba(94,224,138,.6)', null, [4, 4]);
       if (u.d.role === 'interceptor') circle(u.hx, u.hy, 10, 'rgba(94,224,138,.35)', null, [2, 5]);
@@ -1490,7 +1555,7 @@ function drawScene(rdt) {
   if (V.pending?.kind === 'sam' && V.cursor) circle(V.cursor.x, V.cursor.y, samRange(V.pending.d), '#ffb347', 'rgba(255,179,71,.08)', [6, 4]);
   const b = P(BASE.x, BASE.y), atBase = G.air.filter(a => a.state === 'base' || a.state === 'service').length;
   g.strokeStyle = '#4fd1e0'; g.lineWidth = 3; g.beginPath(); g.moveTo(b.x - 10, b.y + 6); g.lineTo(b.x + 10, b.y - 6); g.stroke(); g.lineWidth = 1;
-  g.fillStyle = '#4fd1e0'; g.font = '11px system-ui'; g.textAlign = 'center'; g.fillText(`✈ Васильків${atBase ? ` (${atBase})` : ''}`, b.x, b.y + 18);
+  g.fillStyle = '#4fd1e0'; g.font = '11px system-ui'; g.textAlign = 'center'; g.fillText(`✈ ${BASE.name.replace(/^Аеродром\s*/, '')}${atBase ? ` (${atBase})` : ''}`, b.x, b.y + 18);
   const ICON = {energy: '⚡', air: '✈', base: '✈', fuel: '⛽', rail: '🚆', misc: '◆', depot: '📦'};
   for (const c of G.cities) if (c.t !== 'city') { // обʼєкти інфраструктури і склади
     const p = P(c.x, c.y), k = c.hp / c.max, col = c.hp <= 0 ? '#777' : k > .6 ? '#ffd54a' : '#ff8a3a';
@@ -1508,6 +1573,10 @@ function drawScene(rdt) {
     g.font = (c.w > 1 ? 'bold 13px' : '11px') + ' system-ui'; g.textAlign = 'center';
     g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.7)'; g.strokeText(c.name, p.x, p.y - s); g.fillText(c.name, p.x, p.y - s); g.lineWidth = 1;
     g.fillStyle = '#311'; g.fillRect(p.x - 18, p.y + s, 36, 3); g.fillStyle = '#5ee08a'; g.fillRect(p.x - 18, p.y + s, 36 * k, 3);
+  }
+  for (const r of G.radars) {
+    unit(r, r.d, r.on ? '#c88cff' : '#7d6a90', 24, `${r.d.name}${r.on ? '' : ' (тихо)'}${r.hp < 100 ? ` · ${r.hp}%` : ''}`);
+    if (r === V.sel) for (const s of G.sams) if (dist(s, r) <= LINK_KM) { const a = P(r.x, r.y), b = P(s.x, s.y); g.strokeStyle = 'rgba(200,140,255,.5)'; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); g.setLineDash([]); }
   }
   for (const s of G.sams) {
     const st = used(s.stock, SAM_MSL), empty = !used(s.load, SAM_MSL) && !st;
@@ -1532,7 +1601,7 @@ function drawScene(rdt) {
     const p = P(b.x, b.y); g.fillStyle = '#bbb'; g.beginPath(); g.arc(p.x, p.y, 2.5, 0, 7); g.fill();
     if (Math.random() < .3) V.parts.push({x: b.x, y: b.y, vx: 0, vy: .2, t: 0, life: 1.5, c: '#666', r: 3, smoke: true});
   }
-  for (const s of G.sams) if (s.mv) { const p = P(s.x, s.y), q = P(s.mv.x, s.mv.y); g.strokeStyle = 'rgba(79,209,224,.6)'; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); }
+  for (const s of [...G.sams, ...G.radars]) if (s.mv) { const p = P(s.x, s.y), q = P(s.mv.x, s.mv.y); g.strokeStyle = 'rgba(79,209,224,.6)'; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); }
   const sel = V.sel;
   if (sel && sel.x != null && alive(sel) && !['base', 'service'].includes(sel.state)) {
     const p = P(sel.x, sel.y); g.strokeStyle = sel.kind === 'enemy' ? '#ff5a5a' : '#ffb347'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, 22, 0, 7); g.stroke(); g.lineWidth = 1;
@@ -1565,14 +1634,14 @@ function hud() {
   if (!G) return;
   const kyiv = G.cities[0], h = Math.floor(1.5 + G.time / 3600) % 24, m = Math.floor(G.time / 60) % 60;
   const visible = G.enemies.filter(e => e.det).length;
-  $('top').innerHTML = `<b>Оборона Києва</b> <span class="k">· ${DIFF[G.diff].name}</span>
+  $('top').innerHTML = `<b>${OPS[G.op].name}</b> <span class="k">· ${DIFF[G.diff].name}</span>
     <span><span class="k">Хвиля</span> ${G.wave}/${WAVES.length}${G.phase === 'deploy' ? ' · підготовка' : ''}</span>
     <span><span class="k">Час</span> ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} <span class="k">(${V.speed ? V.speed + '×' : 'пауза'})</span></span>
     <span><span class="k">Ресурс</span> <b>${G.res} ⛁</b></span>
-    <span><span class="k">Київ</span> <span class="hp"><i style="width:${kyiv.hp / kyiv.max * 100}%"></i></span></span>
+    <span><span class="k">${kyiv.name}</span> <span class="hp"><i style="width:${kyiv.hp / kyiv.max * 100}%"></i></span></span>
     <span><span class="k">На радарі</span> ${visible}${G.enemies.length > visible ? ` <span class="k">(+${G.enemies.length - visible} поза зоною)</span>` : ''}</span>
     <span><span class="k">Збито</span> ${G.kills} <span class="k">Влучань</span> ${G.leaks}</span>
-    <span title="Поразка, якщо зруйновано ${loseLimit()} міст або Київ"><span class="k">Міст зруйновано</span> <b style="color:${lostCities() ? 'var(--bad)' : 'inherit'}">${lostCities()} з ${G.cities.filter((c, i) => i && c.t === 'city').length}</b> <span class="k">(поразка при ${loseLimit()})</span></span>
+    <span title="Поразка, якщо зруйновано ${loseLimit()} міст або ${kyiv.name}"><span class="k">Міст зруйновано</span> <b style="color:${lostCities() ? 'var(--bad)' : 'inherit'}">${lostCities()} з ${G.cities.filter((c, i) => i && c.t === 'city').length}</b> <span class="k">(поразка при ${loseLimit()})</span></span>
     ${(() => { const r = G.alerts.filter(a => a.lvl === 2).length, y = G.alerts.filter(a => a.lvl === 1).length; return r || y ? `<span><span class="k">Тривога</span> <b style="color:var(--bad)">${r}</b>${y ? ` <span style="color:#ffd54a">+${y} загроза</span>` : ''} <span class="k">з ${RAIONS.length}</span></span>` : '<span class="k">Тривоги немає</span>'; })()}
     ${G.strikes.length ? `<span style="color:var(--ok)">Ударів у польоті: ${G.strikes.length}</span>` : ''}
     ${SITES.filter(s => G.siteMult[s.id] < 1).map(s => `<span style="color:var(--ok)">${s.name.split(' ')[0]} −${Math.round((1 - G.siteMult[s.id]) * 100)}%</span>`).join(' ')}`;
