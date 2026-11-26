@@ -381,8 +381,8 @@ const SPEEDS = [0, 1, 10, 30, 60]; // множник реального часу
 const ATK_COST = {shahed: 2, garpiya: 2, shahedMS: 4, gerbera: 1, gerbera2: 1, gerberaW: 1, parodiya: 1, italmas: 2, geran3: 6, geran4: 8, geran5: 12,
   banderol: 6, klin: 6, filin: 6, orlan: 3, zala: 3, supercam: 3, gerberaR: 2, forpost: 8, orion: 12,
   iskander: 30, kn23: 26, s300g: 12, kh101: 24, kh555: 18, kalibr: 24, iskK: 26, kh59: 20, kh69: 24, kinzhal: 45, tsirkon: 50, kh22: 35, oniks: 30};
-const ATK_START = [400, 330, 280, 240, 200]; // стартовий бюджет атаки за складністю (чим складніше — тим сильніша ППО ШІ)
-const AI_UNITS = [[2, 1], [3, 1], [4, 2], [5, 2], [6, 3]]; // ППО ШІ: [на старті, додає щохвилі]
+const ATK_START = [300, 250, 210, 180, 150]; // стартовий бюджет атаки за складністю (чим складніше — тим сильніша ППО ШІ)
+const AI_UNITS = [[3, 1], [4, 1], [5, 2], [7, 2], [9, 3]]; // ППО ШІ: [на старті, додає щохвилі]
 const DMG_DIV = 30; // урон місту/обʼєкту = БЧ (кг) / 30
 const OPT_DEF = {debris: .2, balWarn: .75, hunt: null, pk: {}};
 
@@ -443,7 +443,7 @@ function newGame(diff = 2, opt = {}, op = 'kyiv', mode = 'defend') {
     op: OP_ID, mode, plan: [], hits: 0, lost: 0, routes: null, siteMult: Object.fromEntries(SITES.map(s => [s.id, 1])), alerts: RAIONS.map(() => ({lvl: 0, quiet: 0})), hi: {},
   };
   for (const c of g.cities) c.id = g.nid++;
-  if (mode === 'attack') { g.res = ATK_START[diff]; const prev = G; G = g; aiDefend(AI_UNITS[diff][0] + 1); G = prev; }
+  if (mode === 'attack') { g.res = ATK_START[diff]; g.cities[0].hp = g.cities[0].max = 90; const prev = G; G = g; aiDefend(AI_UNITS[diff][0]); G = prev; }
   return g;
 }
 const newId = () => G.nid++;
@@ -454,7 +454,7 @@ function byId(id) {
 function pay(n) { if (G.res < n) { say(`Бракує ресурсу (потрібно ${n} ⛁).`, 'bad'); return false; } G.res -= n; G.spent += n; return true; }
 const objDown = t => G.cities.filter(c => c.t === t && c.hp <= 0).length;
 const lostCities = () => G.cities.filter((c, i) => i > 0 && c.t === 'city' && c.hp <= 0).length;
-const loseLimit = () => Math.max(2, Math.ceil(G.cities.filter((c, i) => i > 0 && c.t === 'city').length * DIFF[G.diff].lose));
+const loseLimit = () => Math.max(2, Math.ceil(G.cities.filter((c, i) => i > 0 && c.t === 'city').length * (G.mode === 'attack' ? .55 : DIFF[G.diff].lose)));
 const supplyDown = sup => G.cities.find(c => c.t === 'depot' && c.sup === sup && c.hp <= 0);
 const price = m => Math.ceil(m.cost * (objDown('rail') ? 1.25 : 1));
 function supplyOk(m) {
@@ -743,9 +743,9 @@ function startAttack() {
   say(`Хвиля ${G.wave}: запущено ${G.events.length} засобів. ППО противника приведено в бойову готовність.`, 'warn');
 }
 // ШІ-оборона: розставляє комплекси біля найцінніших цілей; боєкомплект — безкоштовно
-const AI_POOL = [['mvg', 'zu23', 5], ['mvg', 'mg127', 3], ['gepard', 'g35', 3], ['buk', 'm38m1', 3], ['iris', 'irisSL', 2], ['nasams', 'amr', 2], ['s300', 'n6', 2], ['patriot', 'pac3', 1]];
+const AI_POOL = [['mvg', 'zu23', 5], ['mvg', 'manpads', 2], ['gepard', 'g35', 4], ['buk', 'm38m1', 3], ['iris', 'irisSL', 3], ['nasams', 'amr', 3], ['s300', 'n6', 2], ['patriot', 'pac3', 1], ['sampt', 'aster30', 1]];
 function aiPick() { const tot = AI_POOL.reduce((a, q) => a + q[2], 0); let r = Math.random() * tot; for (const q of AI_POOL) if ((r -= q[2]) <= 0) return q; return AI_POOL[0]; }
-function aiFill(s) { const m = SAM_MSL[s.ai]; s.load = {}; s.stock = {}; const k = Math.floor(s.d.cap / m.size); s.load[m.id] = k; s.stock[m.id] = Math.floor(s.d.cap * 2 / m.size); }
+function aiFill(s) { const m = SAM_MSL[s.ai]; s.load = {}; s.stock = {}; const k = Math.floor(s.d.cap / m.size); s.load[m.id] = k; s.stock[m.id] = Math.floor(s.d.cap * 2 / m.size); s.resup = 0; }
 function aiDefend(n) {
   const tg = G.cities.filter(c => c.hp > 0).sort((a, b) => b.w - a.w + rnd(-1, 1));
   for (let i = 0; i < n; i++) {
@@ -757,12 +757,12 @@ function aiDefend(n) {
       filt: {drone: true, cruise: true, bal: !!d.bm}, ai: msl, spotted: false};
     aiFill(s); G.sams.push(s);
   }
-  if (G.wave % 2 === 0 && G.radars.length < 3) { const c = pick(tg.slice(0, 4)); G.radars.push({id: newId(), kind: 'radar', d: pick(RADAR), x: c.x + rnd(-12, 12), y: c.y + rnd(-12, 12), on: true, hp: 100, rot: 0, ai: true, spotted: false}); }
-  if (G.wave >= 2 && G.air.length < Math.min(3, G.wave - 1)) { // винищувачі ШІ на чергуванні
+  if (G.radars.length < Math.min(5, 1 + Math.ceil(G.wave / 2))) { const c = pick(tg.slice(0, 4)); G.radars.push({id: newId(), kind: 'radar', d: pick(RADAR), x: c.x + rnd(-12, 12), y: c.y + rnd(-12, 12), on: true, hp: 100, rot: 0, ai: true, spotted: false}); }
+  while (G.air.length < Math.min(4, Math.floor(G.wave * .6))) { // винищувачі ШІ на чергуванні
     const aid = pick(['mig29', 'su27', 'mig29']), d = AIR.find(a => a.id === aid), c = pick(tg.slice(0, 4));
     const a = {id: newId(), kind: 'air', d, x: BASE.x, y: BASE.y, tx: c.x, ty: c.y, state: 'move', fuel: d.fuel * 1.3, ptb: 1, load: {[d.aam[d.aam.length - 1]]: 2, [d.aam[0]]: 2}, want: {}, gun: d.gun?.bursts || 0, gunWant: true,
       cd: 0, orb: 0, rot: 0, aimT: 0, gunT: 0, lock: null, tgt: null, rtbShots: 0, gunMode: false, filt: {drone: true, cruise: true}, hunt: true, autoRet: true, duty: {x: c.x, y: c.y}, armed: true, turn: .3, ai: true};
-    a.want = {...a.load}; G.air.push(a);
+    a.want = {...a.load}; G.air.push(a); if (G.air.length > 6) break;
   }
 }
 function pickTarget(d) {
@@ -835,7 +835,7 @@ function lead(o, e, v) { return intercept(o, e, v) || {x: e.x, y: e.y}; }
 
 function fire(src, e, vKms, pk, maxKm, name, m) {
   e.eng++;
-  G.shots.push({x: src.x, y: src.y, v: vKms, e, pk, left: maxKm, name, trail: [], mid: m?.id, tbl: m?.tbl});
+  G.shots.push({id: newId(), kind: 'shot', x: src.x, y: src.y, v: vKms, e, pk, left: maxKm, max: maxKm, name, trail: [], mid: m?.id, tbl: m?.tbl, src, t0: G.time});
   snd('launch');
 }
 function gunShot(src, e, pk, name) {
@@ -878,7 +878,7 @@ function impact(e) {
   if (!e.def.warhead) { say(`${e.def.short} впала без вибуху.`); return; }
   G.leaks++; snd('impact'); emit('burst', e.x, e.y, 26, '#ff7a3a', 4); emit('shake', e.def.warhead / 40, e.def.warhead / 2000);
   blast(e.x, e.y, e.def.warhead, e.def.short, e.samT);
-  if (G.mode === 'attack') { const rw = Math.round(e.def.warhead / 20 + (e.city && e.city.t !== 'city' ? 4 : 1)); G.res += rw; G.hits++; G.waveHits++; say(`Влучання ${e.def.short}${e.city ? ' — ' + e.city.name : ''}. +${rw} ⛁`, 'ok'); }
+  if (G.mode === 'attack') { const rw = Math.round(e.def.warhead / 25 + (e.city && e.city.t !== 'city' ? 3 : 1)); G.res += rw; G.hits++; G.waveHits++; say(`Влучання ${e.def.short}${e.city ? ' — ' + e.city.name : ''}. +${rw} ⛁`, 'ok'); }
   if (e.samT) return;
   damage(e.city, e.def.warhead, e.def.short);
 }
@@ -1061,7 +1061,7 @@ function step(dt) {
     if (!used(s.load, SAM_MSL)) {
       dropLock(s);
       if (used(s.stock, SAM_MSL)) s.reload = d.reload;
-      // ШІ: ракети підвозять лише між хвилями — масований наліт може «перевантажити» ППО
+      else if (s.ai && s.resup > 0) { s.resup--; const m = SAM_MSL[s.ai]; s.stock[m.id] = Math.floor(s.d.cap * 2 / m.size); s.reload = d.reload * 2; } // ШІ: одне підвезення за хвилю
       else if (s.auto && G.res >= price(SAM_MSL[s.buyType]) && !supplyDown(SAM_MSL[s.buyType].sup)) buySam(s, s.buyType, 99);
       continue;
     }
@@ -1254,8 +1254,8 @@ function step(dt) {
     G.phase = 'deploy';
     if (G.wave >= WAVES.length) return endOp(G.mode !== 'attack');
     if (G.mode === 'attack') {
-      const bonus = 120 + G.wave * 30; G.res += bonus; for (const s of G.sams) if (s.ai) { aiFill(s); s.reload = 0; } aiDefend(AI_UNITS[G.diff][1] + (G.wave % 3 === 0 ? 1 : 0));
-      for (const c of G.cities) if (c.t !== 'city') c.hp = Math.min(c.max, c.hp + c.max * .3);
+      const bonus = 100 + G.wave * 25; G.res += bonus; for (const s of G.sams) if (s.ai) { aiFill(s); s.reload = 0; } aiDefend(AI_UNITS[G.diff][1] + (G.wave % 3 === 0 ? 1 : 0));
+      for (const c of G.cities) c.hp = c.hp > 0 ? Math.min(c.max, c.hp + c.max * (c.t === 'city' ? .2 : .35)) : c.hp;
       snd('chime'); say(`Хвиля ${G.wave} завершена: влучань ${G.waveHits}, збито ваших засобів ${G.waveLost}. Новий бюджет +${bonus} ⛁. Противник посилив ППО.`, 'ok');
       return;
     }
@@ -1266,7 +1266,7 @@ function step(dt) {
       if (c.t === 'depot') { if (c.hp <= 0 && --c.down <= 0) { c.hp = c.max; say(`${c.name}: відновлено, постачання ${SUP_NAME[c.sup]} поновлено.`, 'ok'); } continue; }
       c.hp = Math.min(c.max, c.hp + c.max * (c.t === 'city' ? .1 : .4));
     }
-    snd('chime'); say(`Відбій тривоги. Хвиля ${G.wave} відбита. +${bonus} ⛁ на посилення${k < 1 ? ` (−${Math.round((1 - k) * 100)}% через зруйновану інфраструктуру)` : ''}.`, 'ok');
+    emit('alarmEnd'); say(`Відбій тривоги. Хвиля ${G.wave} відбита. +${bonus} ⛁ на посилення${k < 1 ? ` (−${Math.round((1 - k) * 100)}% через зруйновану інфраструктуру)` : ''}.`, 'ok');
   }
 }
 // зняти всі захоплення й ракети з цілі, що зникла
