@@ -8,29 +8,29 @@
 // gun — черга з гармати/кулемета: летить миттєво, pack — скільки черг за одну покупку.
 // dim — [довжина, діаметр] м (оцінки ~), для 3D/2D вигляду.
 const SAM_MSL = {
- pac2b: {name:'PAC-2 (базова)', range:160, v:1700, pk:.7, pkD:.9, cost:6, size:12, sup:'west', note:'4 на ПУ, лише літаки/КР/дрони', dim:[5.3,.41]},
- pac2:  {name:'PAC-2 GEM+', range:160, v:1564, pk:.75, pkD:.9, bm:true, pkBal:.5, cost:8, size:12, sup:'west', note:'4 на ПУ, балістика обмежено', dim:[5.3,.41]},
- pac3:  {name:'PAC-3 CRI', range:70, v:1714, pk:.9, pkD:.95, bm:true, pkBal:.85, cost:12, size:3, sup:'west', note:'16 на ПУ, ~70 км'},
- mse:   {name:'PAC-3 MSE', range:120, v:1714, pk:.92, pkD:.95, bm:true, pkBal:.9, cost:16, size:4, sup:'west', note:'~12 на ПУ, ~120 км'},
- aster30:{name:'Aster 30 B1', range:120, v:1400, pk:.9, bm:true, pkBal:.75, cost:13, size:1, sup:'west', note:'~120 км, ~4,5 М'},
- aster30nt:{name:'Aster 30 B1NT', range:150, v:1500, pk:.92, bm:true, pkBal:.88, cost:18, size:1, sup:'west', note:'~150 км, нова ГСН проти БР'},
+ pac2b: {name:'PAC-2 (базова)', range:160, v:1700, pk:.7, pkD:.9, cost:8, size:12, sup:'west', note:'4 на ПУ, лише літаки/КР/дрони', dim:[5.3,.41]},
+ pac2:  {name:'PAC-2 GEM+', range:160, v:1564, pk:.75, pkD:.9, bm:true, pkBal:.5, cost:11, size:12, sup:'west', note:'4 на ПУ, балістика обмежено', dim:[5.3,.41]},
+ pac3:  {name:'PAC-3 CRI', range:70, v:1714, pk:.9, pkD:.95, bm:true, pkBal:.85, cost:18, size:3, sup:'west', note:'16 на ПУ, ~70 км'},
+ mse:   {name:'PAC-3 MSE', range:120, v:1714, pk:.92, pkD:.95, bm:true, pkBal:.9, cost:24, size:4, sup:'west', note:'~12 на ПУ, ~120 км'},
+ aster30:{name:'Aster 30 B1', range:120, v:1400, pk:.9, bm:true, pkBal:.75, cost:19, size:1, sup:'west', note:'~120 км, ~4,5 М'},
+ aster30nt:{name:'Aster 30 B1NT', range:150, v:1500, pk:.92, bm:true, pkBal:.88, cost:26, size:1, sup:'west', note:'~150 км, нова ГСН проти БР'},
  v55k:  {name:'5В55К', range:47, v:1700, pk:.65, cost:4, sup:'soviet', note:'~47 км'},
  v55r:  {name:'5В55Р', range:75, v:1700, pk:.7, cost:5, sup:'soviet', note:'~75 км'},
  n6:    {name:'48Н6', range:150, v:2000, pk:.75, bm:true, pkBal:.55, cost:7, sup:'soviet', note:'150 км, ПРО'},
  v21:   {name:'5В21', range:160, v:900, pk:.55, pkD:.45, cost:3, sup:'soviet', note:'~160 км'},
  v28:   {name:'5В28', range:300, v:1200, pk:.6, pkD:.45, cost:5, sup:'soviet', note:'до 300 км (С-200Д)'},
- irisSL:{name:'IRIS-T SL', range:40, v:1000, pk:.9, cost:5, sup:'west', note:'40 км'},
+ irisSL:{name:'IRIS-T SL', range:40, v:1000, pk:.9, cost:8, sup:'west', note:'40 км'},
  m38:   {name:'9М38', range:30, v:850, pk:.7, cost:3, sup:'soviet', note:'~30 км'},
  m38m1: {name:'9М38М1', range:35, v:850, pk:.75, cost:4, sup:'soviet', note:'~35 км'},
- aim9x: {name:'AIM-9X', range:10, v:900, pk:.8, cost:2, sup:'west', note:'~10 км, ІЧ'},
- amr:   {name:'AIM-120C', range:30, v:1200, pk:.85, cost:4, sup:'west', note:'~30 км'},
- amrer: {name:'AMRAAM-ER', range:50, v:1300, pk:.85, cost:6, sup:'west', note:'~50 км'},
- m23a:  {name:'MIM-23A', range:25, v:750, pk:.55, cost:2, sup:'west', note:'~25 км'},
- m23b:  {name:'MIM-23B', range:40, v:800, pk:.65, cost:3, sup:'west', note:'~40 км'},
+ aim9x: {name:'AIM-9X', range:10, v:900, pk:.8, cost:3, sup:'west', note:'~10 км, ІЧ'},
+ amr:   {name:'AIM-120C', range:30, v:1200, pk:.85, cost:6, sup:'west', note:'~30 км'},
+ amrer: {name:'AMRAAM-ER', range:50, v:1300, pk:.85, cost:9, sup:'west', note:'~50 км'},
+ m23a:  {name:'MIM-23A', range:25, v:750, pk:.55, cost:3, sup:'west', note:'~25 км'},
+ m23b:  {name:'MIM-23B', range:40, v:800, pk:.65, cost:4, sup:'west', note:'~40 км'},
  v27:   {name:'5В27Д', range:25, v:700, pk:.6, cost:2, sup:'soviet', note:'~25 км'},
- vt1:   {name:'VT1', range:11, v:1250, pk:.75, cost:2, sup:'west', note:'~11 км, ~3,5 М'},
- asp1:  {name:'Aspide Mk1', range:15, v:1350, pk:.7, cost:2, sup:'west', note:'~15 км'},
- asp2:  {name:'Aspide 2000', range:25, v:1350, pk:.75, cost:3, sup:'west', note:'~25 км'},
+ vt1:   {name:'VT1', range:11, v:1250, pk:.75, cost:3, sup:'west', note:'~11 км, ~3,5 М'},
+ asp1:  {name:'Aspide Mk1', range:15, v:1350, pk:.7, cost:3, sup:'west', note:'~15 км'},
+ asp2:  {name:'Aspide 2000', range:25, v:1350, pk:.75, cost:4, sup:'west', note:'~25 км'},
  // мобільні вогневі групи та зенітні гармати
  mg127: {name:'12,7 мм (кулемет)', range:1.5, v:850, pk:.05, pkD:.07, pkC:.02, cost:1, pack:10, gun:true, sup:'ammo', note:'черга ДШК/M2, ~1,5 км', dim:[.138,.0127]},
  zu23:  {name:'23 мм ЗУ-23-2', range:2.5, v:970, pk:.08, pkD:.12, pkC:.04, cost:1, pack:6, gun:true, sup:'ammo', note:'черга, ~2,5 км', dim:[.2,.023]},
@@ -45,29 +45,29 @@ const balText = m => m.bm ? (m.pkBal >= .8 ? `так (~${Math.round(m.pkBal * 10
 // ППО. react — час реакції (перше захоплення), relock — наступні цілі в бойовому режимі, с (оцінки ~).
 // mobile — може переїжджати (speed км/год), за переїзд платиться 1 ⛁ пального.
 const SAM = [
- {id:'patriot',name:'Patriot MIM-104',country:'США',alt:24,minAlt:.06,cap:48,det:150,reload:900,react:9,relock:3,bm:true,cost:40,msl:['pac2b','pac2','pac3','mse'],
+ {id:'patriot',limit:2,name:'Patriot MIM-104',country:'США',alt:24,minAlt:.06,cap:48,det:150,reload:900,react:9,relock:3,bm:true,cost:60,msl:['pac2b','pac2','pac3','mse'],
   info:[['Клас','велика дальність'],['Дальність','160 км'],['Висота','~24 км'],['Ракети','PAC-3: 1714 м/с, PAC-2 GEM+: 1564 м/с'],['ПУ','16 PAC-3 або 4 PAC-2'],['Балістика','PAC-3 CRI і MSE — так; PAC-2 GEM+ — обмежено; базова PAC-2 — ні']]},
- {id:'sampt',name:'SAMP/T «Mamba»',country:'Франція/Італія',alt:20,minAlt:.05,cap:8,det:150,reload:900,react:8,relock:3,bm:true,cost:38,msl:['aster30','aster30nt'],
+ {id:'sampt',limit:1,name:'SAMP/T «Mamba»',country:'Франція/Італія',alt:20,minAlt:.05,cap:8,det:150,reload:900,react:8,relock:3,bm:true,cost:55,msl:['aster30','aster30nt'],
   info:[['Клас','велика дальність'],['Дальність','~120 км (B1NT ~150)'],['Висота','~20 км'],['Ракета','Aster 30, ~1400 м/с'],['ПУ','8 ракет'],['Радар','Arabel, ~100–150 км'],['Балістика','так (B1NT — краще)']]},
- {id:'s300',name:'С-300ПМУ',country:'СРСР',alt:27,minAlt:.025,cap:4,det:300,reload:900,react:10,relock:3,bm:true,cost:30,msl:['v55k','v55r','n6'],
+ {id:'s300',name:'С-300ПМУ',country:'СРСР',alt:27,minAlt:.025,cap:4,det:300,reload:900,react:10,relock:3,bm:true,cost:26,msl:['v55k','v55r','n6'],
   info:[['Клас','середня/велика дальність'],['Дальність','150–300 км'],['Висота','27 км'],['Ракета','до 2000 м/с'],['ПУ','~4 ракети'],['ПРО','так (48Н6)']]},
- {id:'s200',name:'С-200',country:'СРСР',alt:40,minAlt:.3,cap:1,det:400,reload:900,react:60,relock:20,cost:20,msl:['v21','v28'],
+ {id:'s200',name:'С-200',country:'СРСР',alt:40,minAlt:.3,cap:1,det:400,reload:900,react:60,relock:20,cost:18,msl:['v21','v28'],
   info:[['Клас','велика дальність'],['Дальність','до 300 км'],['Висота','40 км'],['Ракета','700–1200 м/с'],['ПУ','1 ракета'],['Мін. висота','~0,3 км (не бачить КР)']]},
- {id:'iris',name:'IRIS-T SLM',country:'Німеччина',alt:25,minAlt:.02,cap:8,det:250,reload:600,react:6,relock:2,cost:25,msl:['irisSL'],
+ {id:'iris',limit:3,name:'IRIS-T SLM',country:'Німеччина',alt:25,minAlt:.02,cap:8,det:250,reload:600,react:6,relock:2,cost:35,msl:['irisSL'],
   info:[['Клас','середня дальність'],['Дальність','40 км'],['Висота','25 км'],['Ракета','~1000 м/с (~3 М)'],['ПУ','8 ракет'],['Радар','~250 км (TRML-4D)']]},
- {id:'buk',name:'Бук-М1 ★',country:'СРСР',alt:22,minAlt:.015,cap:4,det:160,reload:600,react:22,relock:4,cost:20,msl:['m38','m38m1'],
+ {id:'buk',name:'Бук-М1 ★',country:'СРСР',alt:22,minAlt:.015,cap:4,det:160,reload:600,react:22,relock:4,cost:18,msl:['m38','m38m1'],
   info:[['Клас','середня дальність'],['Дальність','~35 км'],['Висота','~22 км'],['Ракета','~850 м/с'],['ПУ','4 ракети'],['Радар','~160 км']]},
- {id:'nasams',name:'NASAMS ★',country:'Норвегія/США',alt:15,minAlt:.03,cap:6,det:75,reload:600,react:5,relock:2,cost:20,msl:['aim9x','amr','amrer'],
+ {id:'nasams',limit:2,name:'NASAMS ★',country:'Норвегія/США',alt:15,minAlt:.03,cap:6,det:75,reload:600,react:5,relock:2,cost:30,msl:['aim9x','amr','amrer'],
   info:[['Клас','середня дальність'],['Дальність','~30–50 км (від ракети)'],['Висота','~15 км'],['ПУ','6 ракет'],['Радар','~75 км']]},
- {id:'hawk',name:'MIM-23 HAWK',country:'США',alt:18,minAlt:.06,cap:3,det:100,reload:600,react:15,relock:5,cost:15,msl:['m23a','m23b'],
+ {id:'hawk',limit:3,name:'MIM-23 HAWK',country:'США',alt:18,minAlt:.06,cap:3,det:100,reload:600,react:15,relock:5,cost:18,msl:['m23a','m23b'],
   info:[['Клас','середня дальність'],['Дальність','~40 км'],['Висота','~18 км'],['Ракета','~800 м/с'],['ПУ','3 ракети']]},
- {id:'s125',name:'С-125М',country:'СРСР',alt:20,minAlt:.02,cap:4,det:110,reload:600,react:26,relock:6,cost:10,msl:['v27'],
+ {id:'s125',name:'С-125М',country:'СРСР',alt:20,minAlt:.02,cap:4,det:110,reload:600,react:26,relock:6,cost:9,msl:['v27'],
   info:[['Клас','мала дальність'],['Дальність','12 км (С-125), до 40 км (модерн.)'],['Висота','20–25 км'],['Ракета','~700 м/с'],['ПУ','4 ракети']]},
- {id:'crotale',name:'Crotale NG',country:'Франція',alt:6,minAlt:.015,cap:8,det:20,reload:500,react:6,relock:2,cost:8,msl:['vt1'],
+ {id:'crotale',limit:2,name:'Crotale NG',country:'Франція',alt:6,minAlt:.015,cap:8,det:20,reload:500,react:6,relock:2,cost:12,msl:['vt1'],
   info:[['Клас','мала дальність'],['Дальність','~11 км'],['Висота','~6 км'],['Ракета','~1250 м/с'],['ПУ','~8 ракет']]},
- {id:'aspide',name:'Skyguard Aspide',country:'Швейцарія/Італія',alt:5,minAlt:.015,cap:4,det:20,reload:500,react:8,relock:3,cost:8,msl:['asp1','asp2'],
+ {id:'aspide',limit:2,name:'Skyguard Aspide',country:'Швейцарія/Італія',alt:5,minAlt:.015,cap:4,det:20,reload:500,react:8,relock:3,cost:12,msl:['asp1','asp2'],
   info:[['Клас','мала–середня'],['Дальність','~15–25 км'],['Висота','~5 км'],['Ракета','~1350 м/с (~4 М)'],['ПУ','~4 ракети']]},
- {id:'gepard',name:'Gepard',country:'Німеччина',alt:3,minAlt:0,cap:24,det:15,reload:300,react:4,relock:2,cost:14,msl:['g35'],mobile:true,speed:50,gunCd:4,
+ {id:'gepard',limit:4,name:'Gepard',country:'Німеччина',alt:3,minAlt:0,cap:24,det:15,reload:300,react:4,relock:2,cost:18,msl:['g35'],mobile:true,speed:50,gunCd:4,
   info:[['Клас','зенітна самохідна установка'],['Озброєння','2×35 мм, ~550 постр./хв кожна'],['Дальність','~4 км'],['Висота','~3 км'],['Радар','~15 км'],['У грі','дуже добре по Shahed, мобільна']]},
  {id:'mvg',name:'Мобільна вогнева група',country:'Україна',alt:1.5,minAlt:0,cap:40,det:6,reload:120,react:4,relock:2,cost:4,msl:['mg127','zu23','manpads'],mobile:true,speed:70,gunCd:6,
   info:[['Клас','МВГ на пікапі'],['Озброєння','кулемет 12,7 мм / ЗУ-23-2 / ПЗРК'],['Дальність','1,5–5 км'],['Висота','до ~1,5 км'],['Виявлення','акустика, прожектор, ~6 км'],['У грі','дешева, але шанс збиття малий; мобільна']]},
@@ -82,14 +82,14 @@ const AAM = {
  r27r: {name:'Р-27Р', range:60, v:1300, pk:.7, cost:3, lock:6, sup:'soviet', note:'~60 км, радіо'},
  r27t: {name:'Р-27Т', range:70, v:1300, pk:.72, cost:3, lock:4, sup:'soviet', note:'~70 км, ІЧ'},
  r27er:{name:'Р-27ЕР', range:95, v:1300, pk:.75, cost:4, lock:6, sup:'soviet', note:'до 95 км'},
- aim9m:{name:'AIM-9M', range:18, v:900, pk:.8, cost:2, lock:3, sup:'west', note:'~18 км, ІЧ'},
- aim9x:{name:'AIM-9X', range:35, v:900, pk:.85, cost:3, lock:2, sup:'west', note:'~35 км, ІЧ'},
- aim120:{name:'AIM-120C', range:70, v:1200, pk:.85, cost:5, lock:4, sup:'west', note:'~70 км, АРГСН'},
- apkws:{name:'APKWS II', range:5, v:1000, pk:.4, pkD:.85, pkC:.35, cost:1, lock:2, sup:'west', note:'~5 км, лазерна 70 мм, дешева проти дронів'},
- mica: {name:'MICA', range:60, v:1100, pk:.85, cost:5, lock:4, sup:'west', note:'~60 км'},
- magic:{name:'Magic II', range:15, v:900, pk:.75, cost:2, lock:3, sup:'west', note:'~15 км, ІЧ'},
- irist:{name:'IRIS-T', range:25, v:1000, pk:.9, cost:4, lock:2, sup:'west', note:'~25 км, ІЧ'},
- meteor:{name:'Meteor', range:150, v:1300, pk:.9, cost:10, lock:5, sup:'west', note:'>100 км, ПРД'},
+ aim9m:{name:'AIM-9M', range:18, v:900, pk:.8, cost:3, lock:3, sup:'west', note:'~18 км, ІЧ'},
+ aim9x:{name:'AIM-9X', range:35, v:900, pk:.85, cost:4, lock:2, sup:'west', note:'~35 км, ІЧ'},
+ aim120:{name:'AIM-120C', range:70, v:1200, pk:.85, cost:8, lock:4, sup:'west', note:'~70 км, АРГСН'},
+ apkws:{name:'APKWS II', range:5, v:1000, pk:.4, pkD:.85, pkC:.35, cost:2, lock:2, sup:'west', note:'~5 км, лазерна 70 мм, дешева проти дронів'},
+ mica: {name:'MICA', range:60, v:1100, pk:.85, cost:7, lock:4, sup:'west', note:'~60 км'},
+ magic:{name:'Magic II', range:15, v:900, pk:.75, cost:3, lock:3, sup:'west', note:'~15 км, ІЧ'},
+ irist:{name:'IRIS-T', range:25, v:1000, pk:.9, cost:6, lock:2, sup:'west', note:'~25 км, ІЧ'},
+ meteor:{name:'Meteor', range:150, v:1300, pk:.9, cost:15, lock:5, sup:'west', note:'>100 км, ПРД'},
  igla: {name:'Ігла', range:5, v:570, pk:.6, cost:1, lock:4, sup:'soviet', note:'~5 км, ПЗРК'},
 };
 for (const [id, m] of Object.entries(AAM)) { m.id = id; m.tbl = 'aam'; m.pkD ??= +(m.pk * .9).toFixed(2); }
@@ -97,21 +97,21 @@ for (const [id, m] of Object.entries(AAM)) { m.id = id; m.tbl = 'aam'; m.pkD ??=
 // Авіація. fuel — внутрішнє паливо, с польоту (оцінки ~). ptb — макс. підвісних баків (кожен −slot ракет, +ptbK палива).
 // gun.pk — шанс збити дрон однією чергою.
 const AIR = [
- {id:'mig29',name:'МіГ-29',role:'fighter',country:'СРСР',vmax:2450,cruise:900,dash:1500,ceil:18,span:11.36,len:17.32,count:3,radar:70,msl:6,aam:['r27r','r27t','r27er','r73','r60'],gun:{name:'ГШ-301',rounds:150,bursts:5,pk:.3},fuel:5400,ptb:2,cost:35,
+ {id:'mig29',name:'МіГ-29',role:'fighter',country:'СРСР',vmax:2450,cruise:900,dash:1500,ceil:18,span:11.36,len:17.32,count:3,radar:70,msl:6,aam:['r27r','r27t','r27er','r73','r60'],gun:{name:'ГШ-301',rounds:150,bursts:5,pk:.3},fuel:5400,ptb:2,cost:30,
   info:[['Роль','багатоцільовий винищувач'],['Макс. швидкість','2450 км/год (біля землі 1500)'],['Крейсерська','~900 км/год'],['Бойовий радіус','700 км'],['Стеля','18 км'],['Розмах / довжина','11,36 / 17,32 м']]},
- {id:'su27',name:'Су-27',role:'fighter',country:'СРСР',vmax:2500,cruise:900,dash:1400,ceil:18.5,span:14.7,len:21.9,count:2,radar:100,msl:8,aam:['r27r','r27t','r27er','r73'],gun:{name:'ГШ-301',rounds:150,bursts:5,pk:.3},fuel:10800,ptb:0,cost:45,
+ {id:'su27',name:'Су-27',role:'fighter',country:'СРСР',vmax:2500,cruise:900,dash:1400,ceil:18.5,span:14.7,len:21.9,count:2,radar:100,msl:8,aam:['r27r','r27t','r27er','r73'],gun:{name:'ГШ-301',rounds:150,bursts:5,pk:.3},fuel:10800,ptb:0,cost:40,
   info:[['Роль','винищувач-перехоплювач'],['Макс. швидкість','2500 км/год (біля землі 1400)'],['Крейсерська','~900 км/год'],['Бойовий радіус','1500 км'],['Стеля','18,5 км'],['Розмах / довжина','14,7 / 21,9 м'],['ПТБ','не використовує (великий внутрішній запас)']]},
- {id:'f16',name:'F-16',role:'fighter',country:'США',vmax:2120,cruise:900,dash:1470,ceil:15.2,span:9.96,len:15.06,count:2,radar:110,msl:6,aam:['aim120','aim9x','aim9m','apkws'],gun:{name:'M61A1',rounds:511,bursts:5,pk:.35},fuel:7200,ptb:2,cost:60,
+ {id:'f16',svc:1.6,name:'F-16',role:'fighter',country:'США',vmax:2120,cruise:900,dash:1470,ceil:15.2,span:9.96,len:15.06,count:1,radar:110,msl:6,aam:['aim120','aim9x','aim9m','apkws'],gun:{name:'M61A1',rounds:511,bursts:5,pk:.35},fuel:7200,ptb:2,cost:110,
   info:[['Роль','багатоцільовий винищувач'],['Макс. швидкість','~2120 км/год (2 М; біля землі ~1470)'],['Крейсерська','~900 км/год'],['Бойовий радіус','550 км'],['Стеля','~15,2 км'],['Розмах / довжина','9,96 / 15,06 м'],['Проти дронів','APKWS II — дешеві лазерні ракети']]},
- {id:'m2000',name:'Mirage 2000',role:'fighter',country:'Франція',vmax:2340,cruise:900,dash:1470,ceil:17,span:9.13,len:14.36,count:2,radar:100,msl:6,aam:['mica','magic'],gun:{name:'2×DEFA 554',rounds:250,bursts:5,pk:.3},fuel:7200,ptb:2,cost:50,
+ {id:'m2000',svc:1.6,name:'Mirage 2000',role:'fighter',country:'Франція',vmax:2340,cruise:900,dash:1470,ceil:17,span:9.13,len:14.36,count:1,radar:100,msl:6,aam:['mica','magic'],gun:{name:'2×DEFA 554',rounds:250,bursts:5,pk:.3},fuel:7200,ptb:2,cost:85,
   info:[['Роль','багатоцільовий винищувач'],['Макс. швидкість','2340 км/год (2,2 М)'],['Крейсерська','~900 км/год'],['Бойовий радіус','1550 км'],['Стеля','~17 км'],['Розмах / довжина','9,13 / 14,36 м']]},
- {id:'gripen',name:'JAS 39 Gripen',role:'fighter',country:'Швеція',vmax:2200,cruise:900,dash:1400,ceil:15.24,span:8.4,len:14.1,count:1,radar:120,msl:6,aam:['meteor','aim120','irist'],gun:{name:'BK-27',rounds:120,bursts:4,pk:.3},fuel:7200,ptb:2,cost:55,
+ {id:'gripen',svc:1.6,name:'JAS 39 Gripen',role:'fighter',country:'Швеція',vmax:2200,cruise:900,dash:1400,ceil:15.24,span:8.4,len:14.1,count:1,radar:120,msl:6,aam:['meteor','aim120','irist'],gun:{name:'BK-27',rounds:120,bursts:4,pk:.3},fuel:7200,ptb:2,cost:95,
   info:[['Роль','багатоцільовий винищувач'],['Макс. швидкість','~2200 км/год (2 М)'],['Крейсерська','~900 км/год'],['Бойовий радіус','~800 км'],['Стеля','~15,2 км'],['Розмах / довжина','~8,4 / ~14,1 м']]},
- {id:'asc890',name:'Saab 340 AEW (ASC 890)',role:'awacs',country:'Швеція',vmax:528,cruise:480,dash:500,ceil:7.6,span:21.44,len:19.73,count:1,radar:350,msl:0,aam:[],fuel:18000,ptb:0,cost:70,
+ {id:'asc890',name:'Saab 340 AEW (ASC 890)',role:'awacs',country:'Швеція',vmax:528,cruise:480,dash:500,ceil:7.6,span:21.44,len:19.73,count:1,radar:350,msl:0,aam:[],fuel:18000,ptb:0,cost:90,
   info:[['Роль','літак ДРЛО (радіолокаційний дозор)'],['Радар','Erieye, ~350 км'],['Швидкість','~528 км/год'],['Тривалість','~5 год'],['Стеля','~7,6 км'],['Розмах / довжина','21,44 / 19,73 м'],['У грі','бачить низьколетючі КР далеко за радіогоризонтом наземних РЛС']]},
  {id:'su24',name:'Су-24М',role:'strike',country:'СРСР',vmax:1654,cruise:870,dash:1315,ceil:11,span:17.64,len:22.67,count:2,radar:0,msl:0,aam:[],fuel:7200,ptb:2,cost:40,power:.3,pSucc:.7,
   info:[['Роль','фронтовий бомбардувальник'],['Макс. швидкість','1654 км/год на висоті, 1315 біля землі'],['Бойовий радіус','~560 км'],['Стеля','11 км'],['Розмах / довжина','17,64 (16°) / 22,67 м'],['Озброєння','Storm Shadow / SCALP, ~250 км'],['У грі','удар по пускових → менше цілей']]},
- {id:'su25',name:'Су-25',role:'hunter',country:'СРСР',vmax:950,cruise:750,dash:900,ceil:7,span:14.36,len:15.36,count:2,radar:10,msl:2,aam:['r60'],gun:{name:'ГШ-30-2',rounds:250,bursts:10,pk:.35},fuel:5400,ptb:2,cost:25,
+ {id:'su25',name:'Су-25',role:'hunter',country:'СРСР',vmax:950,cruise:750,dash:900,ceil:7,span:14.36,len:15.36,count:2,radar:10,msl:2,aam:['r60'],gun:{name:'ГШ-30-2',rounds:250,bursts:10,pk:.35},fuel:5400,ptb:2,cost:20,
   info:[['Роль','штурмовик'],['Макс. швидкість','~950 км/год'],['Крейсерська','~750 км/год'],['Бойовий радіус','~750 км'],['Стеля','7 км'],['Розмах / довжина','14,36 / 15,36 м']]},
  {id:'l39',name:'L-39 «Альбатрос»',role:'hunter',country:'Чехословаччина',vmax:750,cruise:600,dash:700,ceil:11,span:9.46,len:12.13,count:2,radar:8,msl:2,aam:['r60'],gun:{name:'ГШ-23',rounds:150,bursts:8,pk:.3},fuel:9000,ptb:0,cost:15,
   info:[['Роль','навчально-бойовий'],['Макс. швидкість','750 км/год'],['Крейсерська','~600 км/год'],['Дальність','1100 км'],['Стеля','~11 км'],['Розмах / довжина','~9,46 / ~12,13 м'],['ПТБ','кінцеві баки вже на крилі']]},
@@ -376,6 +376,7 @@ const OBJ_INFO = {energy: 'енергетика: кожен зруйновани
   fuel: 'нафтобаза: обслуговування літака дорожче (+1 ⛁)', port: 'порт: −8% бонусу після хвилі (експорт зерна)', rail: 'залізниця: ракети дорожчі на 25% (логістика)', misc: 'місце частих падінь дронів', depot: 'склад'};
 const SUP_NAME = {west: 'західних ракет', soviet: 'радянських ракет', ammo: 'набоїв і ПЗРК'};
 const SPEEDS = [0, 1, 10, 30, 60]; // множник реального часу: 1× — усе летить із реальною швидкістю
+const DMG_DIV = 30; // урон місту/обʼєкту = БЧ (кг) / 30
 const OPT_DEF = {debris: .2, balWarn: .75, hunt: null, pk: {}};
 
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -509,7 +510,7 @@ function command(c) {
     const d = AIR.find(a => a.id === c.def);
     if (!d || G.air.filter(a => a.d === d).length >= d.count || !pay(d.cost)) return null;
     const a = {id: newId(), kind: 'air', d, x: BASE.x, y: BASE.y, tx: BASE.x, ty: BASE.y, state: 'base', fuel: d.fuel, ptb: 0, load: {}, want: {}, gun: 0, gunWant: false,
-      cd: 0, orb: 0, rot: 0, aimT: 0, gunT: 0, lock: null, tgt: null, rtbShots: 0, gunMode: d.role === 'hunter', filt: {drone: true, cruise: true}, hunt: true, autoRet: true, duty: null, turn: d.heli ? .6 : d.role === 'strike' || d.role === 'awacs' ? .25 : .3};
+      cd: 0, orb: 0, rot: 0, aimT: 0, gunT: 0, lock: null, tgt: null, rtbShots: 0, gunMode: d.role === 'hunter', filt: {drone: true, cruise: true}, hunt: true, autoRet: false, duty: null, turn: d.heli ? .6 : d.role === 'strike' || d.role === 'awacs' ? .25 : .3};
     G.air.push(a);
     say(`${d.name} прибув на ${BASE.name}.${d.aam.length || d.gun ? ` Купіть ${d.aam.length ? 'ракети' : ''}${d.aam.length && d.gun ? ' і ' : ''}${d.gun ? 'набої' : ''} в панелі борту.` : ''}`, 'warn');
     return a;
@@ -551,6 +552,7 @@ function command(c) {
   if (c.t === 'place') {
     const d = (c.kind === 'sam' ? SAM : UAV).find(x => x.id === c.def);
     if (!d || (c.kind === 'uav' && d.role === 'kamikaze') || !isFinite(c.x) || !isFinite(c.y)) return null;
+    if (c.kind === 'sam' && d.limit && G.sams.filter(q => q.d === d).length >= d.limit) { say(`${d.name}: партнери передали лише ${d.limit} — більше немає.`, 'bad'); return null; }
     const [lat, lng] = toLatLng(c.x, c.y);
     if (!inObl(lat, lng)) { say(`Тільки в межах області (${OP.short}).`, 'bad'); return null; }
     if (!pay(d.cost)) return null;
@@ -771,9 +773,9 @@ function moveTo(o, tx, ty, v, dt) {
 function orbit(o, cx, cy, R, v, dt) { o.orb += v / R * dt; moveTo(o, cx + Math.cos(o.orb) * R, cy + Math.sin(o.orb) * R, v, dt); }
 function lead(o, e, v) { return intercept(o, e, v) || {x: e.x, y: e.y}; }
 
-function fire(src, e, vKms, pk, maxKm, name) {
+function fire(src, e, vKms, pk, maxKm, name, m) {
   e.eng++;
-  G.shots.push({x: src.x, y: src.y, v: vKms, e, pk, left: maxKm, name, trail: []});
+  G.shots.push({x: src.x, y: src.y, v: vKms, e, pk, left: maxKm, name, trail: [], mid: m?.id, tbl: m?.tbl});
   snd('launch');
 }
 function gunShot(src, e, pk, name) {
@@ -791,7 +793,7 @@ function kill(e, by) {
 }
 // вибух: ураження позицій ППО і літаків на аеродромі поруч
 function blast(x, y, w, name, samT) {
-  const R = .4 + w / 160, pt = {x, y};
+  const R = .5 + w / 120, pt = {x, y};
   for (const s of [...G.sams, ...G.radars]) {
     const dd = dist(s, pt); if (dd > R) continue;
     const dmg = s === samT && dd < 1.2 ? 100 : Math.max(10, Math.round(Math.min(100, w * 1.2) * (1 - dd / R)));
@@ -803,7 +805,7 @@ function blast(x, y, w, name, samT) {
 }
 function damage(c, w, name, debris) {
   if (!c || c.hp <= 0) return;
-  c.hp = Math.max(0, c.hp - w / 50);
+  c.hp = Math.max(0, c.hp - w / DMG_DIV);
   if (debris) say(`Уламки ${name}: пошкодження — ${c.name}.`, 'warn'); else say(`Влучання: ${c.name} (${name}).`, 'bad');
   if (c.hp > 0) return;
   if (c.t === 'city') say(`${c.name}: критичні руйнування!`, 'bad');
@@ -1022,7 +1024,7 @@ function step(dt) {
       const pk = mslPk(m, e.def.kind) * (s.hp < 50 ? .8 : 1);
       e.eng--; s.lock = null; // резерв переходить у ракету
       if (m.gun) { gunShot(s, e, pk, `${d.name} (${m.name})`); s.cd = d.gunCd || 4; }
-      else { fire(s, e, m.v / 1000, pk, m.range * 1.3, `${d.name} (${m.name})`); s.cd = 3; }
+      else { fire(s, e, m.v / 1000, pk, m.range * 1.3, `${d.name} (${m.name})`, m); s.cd = 3; }
       s.load[m.id]--; s.hot = 300; s.fired = true;
     }
   }
@@ -1058,7 +1060,7 @@ function step(dt) {
       if (!a.lock || a.lock.e !== e) { if (a.cd > 0 || e.eng >= 1) return false; startLock(a, e, m.lock); return false; }
       if ((a.lock.t -= dt) > 0) return false;
       e.eng--; a.lock = null;
-      fire(a, e, m.v / 1000, mslPk(m, e.def.kind), m.range * 1.3, `${d.name} (${m.name})`);
+      fire(a, e, m.v / 1000, mslPk(m, e.def.kind), m.range * 1.3, `${d.name} (${m.name})`, m);
       a.load[m.id]--; a.cd = 4; return true;
     };
     const autoFire = () => {
@@ -1120,7 +1122,7 @@ function step(dt) {
       if (a.rtbShots > 0 && autoFire()) a.rtbShots--;
       if (moveTo(a, BASE.x, BASE.y, v, dt)) {
         dropLock(a); a.state = 'service'; a.tgt = null; a.aimT = 0; a.feePaid = false; a.feeWarn = false;
-        a.svc = 900 * DIFF[G.diff].svcK * (objDown('base') ? 2 : 1);
+        a.svc = 900 * DIFF[G.diff].svcK * (d.svc || 1) * (objDown('base') ? 2 : 1);
         if (DIFF[G.diff].ground && G.wave + 1 < WAVES.length) a.groundUntil = G.wave + 1;
         say(`${d.name} приземлився: дозаправка й обслуговування${a.groundUntil && grounded(a) ? `; за правилами «Ветерана» пропускає хвилю ${a.groundUntil}` : ''}.`);
       }
