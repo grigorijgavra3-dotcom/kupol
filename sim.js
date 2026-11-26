@@ -884,6 +884,7 @@ function step(dt) {
   for (const e of G.enemies) {
     if (e.dead) continue;
     if (e.def.recon) {
+      if (e.y > 75 && pIn(e.x, e.y)) { const q = outBY(e); e.x = q.x; e.y = q.y; } // не заходити в Білорусь
       if (e.wps.length) { if (moveTo(e, e.wps[0].x, e.wps[0].y, e.v, dt)) { e.c = {x: e.x, y: e.y}; e.wps.shift(); } }
       else if (e.loiter > 0) {
         e.loiter -= dt; orbit(e, e.c.x, e.c.y, 6, e.v, dt);
@@ -903,6 +904,8 @@ function step(dt) {
     if (e.samT && G.sams.includes(e.samT)) { const w = e.wps.at(-1); w.x = e.samT.x; w.y = e.samT.y; } // мобільна ціль переїхала — дрон доводять
     const w = e.wps[0];
     if (moveTo(e, w.x, w.y, e.v, dt)) { e.wps.shift(); if (!e.wps.length) impact(e); }
+    // на розвороті біля кордону радіус повороту міг зачепити Білорусь — повертаємо на українську сторону
+    if (e.y > 75 && e.def.kind !== 'bal' && pIn(e.x, e.y)) { const q = outBY(e); e.x = q.x; e.y = q.y; }
   }
   // уламки
   for (const b of G.debris) { b.x += b.vx * dt; b.y += b.vy * dt; b.vx *= .995; b.vy *= .995; if ((b.t -= dt) <= 0) { b.done = true; landDebris(b); } }
