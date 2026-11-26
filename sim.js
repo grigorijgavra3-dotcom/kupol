@@ -295,7 +295,30 @@ const SITES = [
 let OBL, OBL_POLY, OBL_XY, ZONES, BY_POLY, ROUTES, BAL_FROM, BAL_NAME, CITIES0, OBJS0, DEPOTS0, RAIONS, BASE, LAUNCH;
 const inObl = (lat, lng) => inPoly(OBL_POLY, lat, lng);
 // заборонені зони (Білорусь — ворожа; Молдова, Румунія — нейтральні): дрони їх обходять, наша авіація туди не летить
-const zoneAt = (x, y) => { const [la, ln] = toLatLng(x, y); return ZONES.find(z => la >= z.bb[0] && la <= z.bb[2] && ln >= z.bb[1] && ln <= z.bb[3] && inPoly(z.ring, la, ln)) || null; };
+// межі точні (OpenStreetMap, тисячі точок) — тому кешуємо по клітинках ~2 км: клітинка цілком усередині чи цілком поза зоною
+// береться з кешу, а клітинка, через яку проходить кордон, перевіряється точно
+const ZCELL = .02, zcache = new Map();
+function zoneCell(la0, ln0) {
+  const c = Math.cos(la0 * Math.PI / 180), half = ZCELL * .75;
+  for (const q of ZONES) {
+    if (la0 < q.bb[0] - ZCELL || la0 > q.bb[2] + ZCELL || ln0 < q.bb[1] - ZCELL || ln0 > q.bb[3] + ZCELL) continue;
+    let md = 1e9; const r = q.ring;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+      const ax = (r[j][1] - ln0) * c, ay = r[j][0] - la0, bx = (r[i][1] - ln0) * c, by = r[i][0] - la0, dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy;
+      const t = l ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l)) : 0; md = Math.min(md, Math.hypot(ax + t * dx, ay + t * dy));
+    }
+    if (md < half) return 'B'; // через клітинку йде кордон
+    if (inPoly(r, la0, ln0)) return q;
+  }
+  return null;
+}
+const zoneAt = (x, y) => {
+  const [la, ln] = toLatLng(x, y), i = Math.round(la / ZCELL), j = Math.round(ln / ZCELL), key = i * 100000 + j;
+  let z = zcache.get(key);
+  if (z === undefined) { z = zoneCell(i * ZCELL, j * ZCELL); zcache.set(key, z); }
+  if (z !== 'B') return z;
+  return ZONES.find(q => la >= q.bb[0] && la <= q.bb[2] && ln >= q.bb[1] && ln <= q.bb[3] && inPoly(q.ring, la, ln)) || null;
+};
 const inBY = (lat, lng) => ZONES.some(z => inPoly(z.ring, lat, lng));
 const pIn = (x, y) => !!zoneAt(x, y);
 function zoneNear(p) { let best = null, bd = 1e9; for (const z of ZONES) { const d = inXY(z.xy, p) ? 0 : edgeDist(z.xy, p); if (d < bd) { bd = d; best = z; } } return {z: best, d: bd}; }
@@ -330,7 +353,7 @@ function setOp(id = 'kyiv') {
   OBL = o.bounds; OBL_POLY = o.obl; OBL_XY = OBL_POLY.map(([a, b]) => toXY(a, b));
   ZONES = o.zones.map(z => ({...z, xy: z.ring.map(([a, b]) => toXY(a, b)),
     bb: [Math.min(...z.ring.map(q => q[0])), Math.min(...z.ring.map(q => q[1])), Math.max(...z.ring.map(q => q[0])), Math.max(...z.ring.map(q => q[1]))]}));
-  BY_POLY = ZONES.find(z => z.hostile)?.ring || null;
+  BY_POLY = ZONES.find(z => z.hostile)?.ring || null; zcache.clear();
   ROUTES = o.routes; BAL_FROM = o.bal; BAL_NAME = o.balName;
   CITIES0 = o.cities; OBJS0 = o.objs; DEPOTS0 = o.depots;
   const R = r => { const poly = r.ring.map(([a, b]) => toXY(a, b)); return {name: r.name, poly, ll: r.ring, c: poly.reduce((s, q) => ({x: s.x + q.x / poly.length, y: s.y + q.y / poly.length}), {x: 0, y: 0})}; };
@@ -347,7 +370,7 @@ const DIFF = [
   {name: 'Легко', count: .8, res: 220, reward: 1.2, spot: 450, lose: .45, hunt: .04, svcK: 1},
   {name: 'Нормально', count: 1, res: 180, reward: 1, spot: 300, lose: .4, hunt: .06, svcK: 1},
   {name: 'Складно', count: 1.3, res: 130, reward: .85, spot: 240, lose: .3, hunt: .09, svcK: 1.5},
-  {name: 'Ветеран', count: 1.7, res: 100, reward: .7, spot: 180, lose: .25, hunt: .12, svcK: 1.5, ground: true},
+  {name: 'Ветеран', count: 1.7, res: 100, reward: .7, spot: 180, lose: .25, hunt: .12, svcK: 1.5},
 ];
 const OBJ_INFO = {energy: 'енергетика: кожен зруйнований обʼєкт −12% бонусу після хвилі (знеструмлення)', air: 'аеропорт: −5% бонусу після хвилі', base: 'ваш аеродром: обслуговування літаків удвічі довше, літаки на землі можуть загинути',
   fuel: 'нафтобаза: обслуговування літака дорожче (+1 ⛁)', port: 'порт: −8% бонусу після хвилі (експорт зерна)', rail: 'залізниця: ракети дорожчі на 25% (логістика)', misc: 'місце частих падінь дронів', depot: 'склад'};
@@ -499,6 +522,15 @@ function command(c) {
     say(`${d.name} запущено по пусковому майданчику «${site.name}» (~${site.km} км).`, 'ok');
     return null;
   }
+  if (c.t === 'relocate') {
+    const u2 = byId(c.unit); if (!u2 || !['sam', 'radar'].includes(u2.kind) || !isFinite(c.x) || !isFinite(c.y)) return null;
+    if (!inObl(...toLatLng(c.x, c.y))) { say(`Тільки в межах області (${OP.short}).`, 'bad'); return null; }
+    if (G.phase !== 'wave') { u2.x = c.x; u2.y = c.y; u2.mv = null; if (u2.kind === 'sam') dropLock(u2); say(`${u2.d.name}: переставлено.`); return u2; }
+    if (!pay(1)) return null;
+    if (u2.kind === 'sam') dropLock(u2);
+    u2.mv = {x: c.x, y: c.y}; say(`${u2.d.name}: ${u2.d.mobile ? 'переїзд' : 'згортання й переїзд (стаціонарний комплекс, повільно)'} — 1 ⛁ пального. Під час руху не працює.`);
+    return u2;
+  }
   if (c.t === 'repair') {
     const o = byId(c.obj);
     if (!o || !o.t || o.t === 'city' || o.hp >= o.max) return null;
@@ -561,9 +593,9 @@ function assign(u, e) {
     if (e.def.kind === 'bal') { say('Авіація не перехоплює балістику.', 'bad'); return; }
     if (!canFly(u)) return;
     if (!sum(u.load) && !u.gun) { say(`${u.d.name}: немає ні ракет, ні набоїв!`, 'bad'); return; }
-    u.tgt = e; u.state = 'intercept'; say(`${u.d.name}: перехоплення — ${label(e)}.`);
+    u.tgt = e; u.state = 'intercept'; u.auto = false; u.duty = {x: e.x, y: e.y}; say(`${u.d.name}: перехоплення — ${label(e)}. Зона чергування — там, де ціль.`);
   } else if (u.kind === 'uav' && u.d.role === 'interceptor') {
-    u.tgt = e; u.forced = true;
+    u.tgt = e; u.forced = true; u.hx = e.x; u.hy = e.y; // після перехоплення чергуватиме там
     say(intercept(u, e, u.d.vmax / 3600) ? `${u.d.name}: ціль призначено.` : `${u.d.name}: ціль швидша і віддаляється — не наздожене, спробуйте назустріч.`, 'warn');
   }
 }
@@ -802,7 +834,7 @@ function detect() {
     for (const r of rads) if (dist(r, e) <= Math.min(r.d.det * (e.def.kind === 'drone' ? r.d.small : 1), horizon(e.alt, r.d.ant))) (e.seen ||= []).push(r);
     e.det = !!e.seen || G.sams.some(s => dist(s, e) <= Math.min(s.d.det, hz))
       || G.air.some(a => !['base', 'service'].includes(a.state) && dist(a, e) <= a.d.radar)
-      || G.uavs.some(u => (u.d.role === 'recon' && dist(u, e) <= u.d.sensor) || (u.d.role === 'interceptor' && (dist({x: u.hx, y: u.hy}, e) <= 10 || dist(u, e) <= 3)))
+      || G.uavs.some(u => (u.d.role === 'recon' && dist(u, e) <= u.d.sensor) || (u.d.role === 'interceptor' && dist(u, e) <= 10))
       || G.cities.some(c => c.t === 'city' && dist(c, e) <= 6);
     // ідентифікація типу: оптика/візуально зблизька; балістика й КР — за траєкторією одразу
     if (!e.ident && e.det && (e.def.kind !== 'drone'
@@ -952,7 +984,7 @@ function step(dt) {
   for (const s of G.sams) {
     const d = s.d;
     s.hot = Math.max(0, s.hot - dt);
-    if (s.mv) { if (moveTo(s, s.mv.x, s.mv.y, d.speed / 3600, dt)) { s.mv = null; say(`${d.name}: на новій позиції.`); } continue; }
+    if (s.mv) { if (moveTo(s, s.mv.x, s.mv.y, (d.speed || 20) / 3600, dt)) { s.mv = null; say(`${d.name}: на новій позиції.`); } continue; }
     if (s.reload > 0) {
       if ((s.reload -= dt) <= 0) {
         for (const [k, n] of Object.entries(s.stock)) for (let i = 0; i < n && used(s.load, SAM_MSL) + SAM_MSL[k].size <= d.cap; i++) { s.load[k] = (s.load[k] || 0) + 1; s.stock[k]--; }
@@ -1145,6 +1177,10 @@ function step(dt) {
   G.uavs = G.uavs.filter(u => !u.gone);
 
   if (G.cities[0].hp <= 0 || lostCities() >= loseLimit()) return endOp(false);
+  if (G.phase === 'wave' && G.events.every(e => e.done) && G.enemies.length && G.enemies.every(e => e.def.recon)) {
+    say(`Ударні цілі скінчились — розвідники (${G.enemies.length}) відходять на свою територію.`);
+    G.enemies.forEach(e => { e.dead = true; dropAll(e); }); G.enemies = [];
+  }
   if (G.phase === 'wave' && G.events.every(e => e.done) && !G.enemies.length) {
     G.phase = 'deploy';
     if (G.wave >= WAVES.length) return endOp(true);
@@ -1158,6 +1194,8 @@ function step(dt) {
     snd('chime'); say(`Відбій тривоги. Хвиля ${G.wave} відбита. +${bonus} ⛁ на посилення${k < 1 ? ` (−${Math.round((1 - k) * 100)}% через зруйновану інфраструктуру)` : ''}.`, 'ok');
   }
 }
+// зняти всі захоплення й ракети з цілі, що зникла
+function dropAll(e) { for (const u of [...G.sams, ...G.air]) if (u.lock?.e === e) u.lock = null; G.shots = G.shots.filter(s => s.e !== e); }
 function endOp(win) { G.over = true; G.win = win; emit('end', win); }
 
 // ================= ЕКСПОРТ =================

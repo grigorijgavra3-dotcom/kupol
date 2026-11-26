@@ -82,6 +82,8 @@ button.on{border-color:var(--acc);color:var(--acc)}
 .mrow>div{flex:1;min-width:0}.mrow small{color:var(--dim);display:block;font-size:11px}
 .mrow.pick{background:#1b2a1e}
 .bar{height:5px;background:#222;border-radius:3px;overflow:hidden;margin:2px 0 4px}.bar i{display:block;height:100%;background:var(--acc)}
+#confirm{position:absolute;inset:0;z-index:1200;background:#0008;display:flex;align-items:center;justify-content:center}
+#confirm .screen{background:var(--panel);border:1px solid var(--acc);border-radius:10px;padding:20px 24px;width:min(380px,90vw)}
 #modal{position:absolute;inset:0;z-index:1100;background:#000a;display:flex;align-items:center;justify-content:center}
 #modal .screen{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:24px 28px;width:min(420px,90vw)}
 .mrow img.mi{flex:none;width:34px;height:34px;border-radius:4px;background:radial-gradient(#33402f,#1d2620)}
@@ -141,7 +143,9 @@ button.on{border-color:var(--acc);color:var(--acc)}
     <div class="row"><span>Показувати типові маршрути дронів</span><input type="checkbox" data-set="routes"></div>
     <div class="row"><span>Тіні під технікою</span><input type="checkbox" data-set="shadows"></div>
     <div class="row"><span>Тряска екрана</span><input type="checkbox" data-set="shake"></div>
+    <div class="row"><span>Підтверджувати покупки</span><input type="checkbox" data-set="confirm"></div>
     <div class="row"><span>Голосові оповіщення (як у застосунку «Повітряна тривога»)</span><input type="checkbox" data-set="voice"></div>
+    <div class="row"><span>Голос</span><span><select id="voiceSel" style="background:#14262c;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"><option value="oleksa">Олекса</option><option value="mykyta">Микита</option><option value="tetiana">Тетяна</option></select> <button id="voiceTest" style="padding:4px 10px">▶ Прослухати</button></span></div>
     <div class="row"><span>Тривоги по районах на карті</span><input type="checkbox" data-set="alerts"></div>
     <button id="advT" style="width:100%;margin-top:10px">Розширені налаштування ▸</button>
     <div id="advBox" class="hidden"></div>
@@ -178,10 +182,14 @@ button.on{border-color:var(--acc);color:var(--acc)}
     <button data-speed="0" title="Пауза (пробіл)">⏸</button>
     <button data-speed="1" title="Реальний час">1×</button><button data-speed="10">10×</button><button data-speed="30">30×</button><button data-speed="60">60×</button>
     <button id="startWave">▶ Почати хвилю</button>
+    <button id="skipWave" class="hidden" title="Прокрутити хвилю до кінця (бій розраховується повністю, просто дуже швидко)">⏭ До кінця хвилі</button>
   </div>
 </div>
 
 <div id="balwarn" class="hidden"></div>
+<div id="confirm" class="hidden"><div class="screen"><h2 id="cTitle" style="margin:0 0 8px">Підтвердіть покупку</h2><div id="cText" style="margin-bottom:12px"></div>
+  <label class="note" style="display:flex;gap:6px;align-items:center;margin:0 0 12px"><input type="checkbox" id="cNo"> більше не питати (можна ввімкнути в налаштуваннях)</label>
+  <div style="display:flex;gap:8px"><button id="cYes" style="flex:1;border-color:var(--ok);color:var(--ok)">Купити</button><button id="cCancel" style="flex:1">Скасувати</button></div></div></div>
 <div id="modal" class="hidden"><div class="screen"><h2 id="mTitle"></h2><div id="mText" class="note" style="font-size:14px"></div><div class="vlist"><button id="mAgain">Ще раз</button><button id="mMenu">Головне меню</button></div></div></div>
 
 <script src="ops.js"></script>
@@ -401,7 +409,7 @@ const mi = m => `<img class="mi" src="${mslPic(m)}" alt="">`;
 const toLL = (x, y) => L.latLng(LAT0 + y / KY, LNG0 + x / KX);
 // ================= SETTINGS & AUDIO =================
 const SET = {master: .8, sfx: .8, music: .35, siren: true, ranges: true, labels: true, shake: true, shadows: true, routes: true, diff: 2, cx3d: true,
-  v3_air: true, v3_heli: true, v3_uav: true, v3_enemy: true, v3_sam: true, voice: true, alerts: true,
+  v3_air: true, v3_heli: true, v3_uav: true, v3_enemy: true, v3_sam: true, voice: true, alerts: true, confirm: true,
   adv: {pk: {}, debris: null, balWarn: null, hunt: null, balSlow: true}};
 try { Object.assign(SET, JSON.parse(localStorage.getItem('kupol-settings') || '{}')); } catch (e) {}
 SET.adv = {pk: {}, balSlow: true, ...(SET.adv || {})}; SET.adv.pk ||= {};
@@ -419,10 +427,18 @@ const VOICE = {
   caution: 'Обережно! Наближення до кордону. Далі зона протиповітряної оборони противника. Розверніться!',
   cautionN: 'Обережно! Наближення до кордону нейтральної держави. Залітати заборонено. Розверніться!',
 };
+// озвучка — записані файли (нейромережевий голос Piper, audio/<голос>_<ключ>.mp3); синтезатор браузера — лише запасний варіант
+let voiceNow = null;
 function speak(key) {
-  if (!SET.voice || !window.speechSynthesis) return;
+  if (!SET.voice || V?.ff) return; // під час прокрутки — без голосу
+  try { if (voiceNow) { voiceNow.pause(); voiceNow = null; } } catch (e) {}
+  const a = new Audio(`audio/${SET.voiceName || 'oleksa'}_${key}.mp3`); a.volume = Math.min(1, SET.master + .2); voiceNow = a;
+  a.play().catch(() => speakTTS(key));
+}
+function speakTTS(key) {
+  if (!window.speechSynthesis) return;
   const vs = speechSynthesis.getVoices(), v = vs.find(x => /^uk/i.test(x.lang)) || vs.find(x => /^ru/i.test(x.lang));
-  if (!v) return; // немає українського/російського голосу — лишається напис і сигнал
+  if (!v) return;
   const u = new SpeechSynthesisUtterance(VOICE[key]); u.voice = v; u.lang = v.lang; u.rate = 1.02; u.volume = Math.min(1, SET.master + .2);
   speechSynthesis.speak(u);
 }
@@ -513,6 +529,13 @@ function buildOpLayers() {
     L.polygon(z.ring, {color: z.hostile ? '#ff3b3b' : '#9fb3c8', weight: 2, dashArray: '4 6', fillColor: z.hostile ? '#ff3b3b' : '#9fb3c8', fillOpacity: z.hostile ? .12 : .1, interactive: false}),
     L.marker(z.label, {interactive: false, icon: L.divIcon({className: '', html: `<div style="color:${z.hostile ? '#ff8a8a' : '#c8d6e5'};font:bold 12px system-ui;white-space:nowrap;text-shadow:0 0 3px #000">${z.name.toUpperCase()} — ${z.hostile ? 'ППО противника' : 'нейтральна, не залітати'}</div>`})}),
   ]));
+  // сусідні області — тонкі межі з підписами
+  const nb = (OPS_DATA[G?.op || 'kyiv'].neighbors || []).flatMap(n => {
+    const c = n.ring.reduce((s, q) => [s[0] + q[0] / n.ring.length, s[1] + q[1] / n.ring.length], [0, 0]);
+    return [L.polyline(n.ring, {color: '#e8e2c8', weight: 1.5, opacity: .55, dashArray: '6 4', interactive: false}),
+      L.marker(c, {interactive: false, icon: L.divIcon({className: '', html: `<div style="color:#f3ecd0;font:600 11px system-ui;white-space:nowrap;text-shadow:0 0 3px #000,0 0 2px #000;transform:translate(-50%,-50%)">${n.name}</div>`})})];
+  });
+  byLayer.addLayer(L.layerGroup(nb));
   rLayers = RAIONS.map(r => L.polygon(r.ll, {color: '#4fd1e0', weight: 1, opacity: .45, fillOpacity: 0, interactive: false}).bindTooltip(r.name, {sticky: true}));
   alertLayer = L.layerGroup(rLayers);
 }
@@ -1091,6 +1114,9 @@ document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => {
   if (to === 'settings') returnTo = 'main'; show(to);
 });
 $('setX').onclick = () => { AU.click(); show(returnTo); };
+$('voiceSel').value = SET.voiceName || 'oleksa';
+$('voiceSel').onchange = () => { SET.voiceName = $('voiceSel').value; saveSet(); speak('alarm'); };
+$('voiceTest').onclick = () => { AU.init(); const was = SET.voice; SET.voice = true; speak('alarm'); SET.voice = was; };
 document.querySelectorAll('[data-set]').forEach(inp => {
   const k = inp.dataset.set;
   if (inp.type === 'checkbox') inp.checked = SET[k]; else inp.value = SET[k];
@@ -1230,7 +1256,7 @@ function drainEvents() {
     else if (type === 'voice') {
       if (a === 'high') { speak(b); danger(b === 'bal' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — БАЛІСТИКА' : b === 'pkr' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — НАДЗВУКОВІ РАКЕТИ' : '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — КРИЛАТІ РАКЕТИ'); AU.siren(); }
       else speak(a);
-    } else if (type === 'balwarn') balWarn(a, b);
+    } else if (type === 'balwarn' && !V.ff) balWarn(a, b);
     else if (type === 'caution') { speak(d ? 'caution' : 'cautionN'); danger(`⚠ ОБЕРЕЖНО! ${a}: ${b} км до кордону з ${c || 'сусідньою державою'} — ${d ? 'далі ППО противника!' : 'далі нейтральний простір, не залітати!'}`, true); }
   }
   G.out.length = 0;
@@ -1241,7 +1267,7 @@ function balWarn(dir, type) {
   el.innerHTML = `<h3>📡 Попередження від західних партнерів</h3><div>Зафіксовано підготовку до пуску балістичної ракети (${type}).<br>Напрямок: <b>${dir}</b>. Пуск ≈ через <b>20 с</b>.</div>
     <div class="note" style="margin:6px 0 0">Переведіть Patriot / SAMP/T на балістику. Таке попередження приходить не завжди.</div><button id="bwOk">Прийнято — закрити</button>`;
   el.classList.remove('hidden'); speak('balwarn');
-  if (SET.adv.balSlow && V.speed > 1) { V.bwPrev = V.speed; setSpeed(1); }
+  if (SET.adv.balSlow && V.speed > 1 && !V.ff) { V.bwPrev = V.speed; setSpeed(1); }
   $('bwOk').onclick = () => { AU.click(); el.classList.add('hidden'); if (V?.bwPrev) { setSpeed(V.bwPrev); V.bwPrev = 0; } };
 }
 function endScreen(win) {
@@ -1256,6 +1282,7 @@ function setSpeed(s) { if (!G) return; V.speed = s; if (s) V.lastSpeed = s; docu
 document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { AU.click(); setSpeed(+b.dataset.speed); });
 $('menuBtn').onclick = () => { AU.click(); V.paused = true; show('pause'); };
 $('startWave').onclick = () => { AU.click(); cmd({t: 'startWave'}); };
+$('skipWave').onclick = () => { AU.click(); V.ff = !V.ff; if (V.ff) logMsg('Прокрутка до кінця хвилі… (натисніть ще раз, щоб зупинити)', 'warn'); };
 const sideMin = v => { $('side').classList.toggle('min', v); $('sideMin').textContent = v ? '☰' : '✕'; };
 document.querySelectorAll('#side [data-tab]').forEach(b => b.onclick = () => {
   AU.click();
@@ -1323,12 +1350,22 @@ function updateCards() {
   $('hint').textContent = p ? `Клік по карті — ${p.kind === 'uav' ? 'запустити' : 'розгорнути'} ${p.d.name}. Esc — скасувати.`
     : 'Клік по своєму юніту — вибір. Клік по цілі — що це. Пробіл — пауза.';
 }
+// підтвердження покупки: «Точно купити X за N ⛁?»
+function confirmBuy(name, cost, extra, yes) {
+  if (!SET.confirm) return yes();
+  if (G.res < cost) { logMsg(`Бракує ресурсу (потрібно ${cost} ⛁).`, 'bad'); return; }
+  const was = V.speed; if (was) setSpeed(0);
+  $('cText').innerHTML = `Купити <b>${name}</b> за <b>${cost} ⛁</b>?${extra ? `<div class="note" style="margin:6px 0 0">${extra}</div>` : ''}<div class="note" style="margin:6px 0 0">Ресурс зараз: ${G.res} ⛁ → після покупки ${G.res - cost} ⛁</div>`;
+  $('cNo').checked = false; $('confirm').classList.remove('hidden');
+  const close = ok => { $('confirm').classList.add('hidden'); if ($('cNo').checked) { SET.confirm = false; saveSet(); document.querySelectorAll('[data-set=confirm]').forEach(i => i.checked = false); } if (was) setSpeed(was); if (ok) yes(); };
+  $('cYes').onclick = () => { AU.click(); close(true); }; $('cCancel').onclick = () => { AU.click(); close(false); };
+}
 function cardClick(d) {
   AU.click();
   if (V.tab === 'air') {
     const idle = owned(d).find(a => a.state === 'base');
     if (idle) { select(idle); return; }
-    const a = cmd({t: 'buyAir', def: d.id}); if (a) select(a);
+    confirmBuy(d.name, d.cost, `${ROLE[d.role]}; прибуде на ${BASE.name}, ракети й набої купуються окремо.`, () => { const a = cmd({t: 'buyAir', def: d.id}); if (a) select(a); });
     return;
   }
   if (d.role === 'kamikaze') { if (G.res < d.cost) { logMsg(`Бракує ресурсу (потрібно ${d.cost} ⛁).`, 'bad'); return; } select({kind: 'strikepick', d}); return; }
@@ -1354,14 +1391,36 @@ function pickAt(cp, onlyEnemy) {
 const myUnit = u => u && ['sam', 'air', 'uav', 'radar'].includes(u.kind);
 function select(u) { V.sel = u; V.pending = null; renderSel(); updateCards(); }
 map.on('mousemove', e => { if (V) V.cursor = toXY(e.latlng.lat, e.latlng.lng); });
+map.on('dragstart', () => { if (V?.follow) { V.follow = null; renderSel(); } });
+// (7) перетягування своєї техніки: ППО/РЛС — переставити (між хвилями миттєво), авіація/БпЛА — летіти туди
+map.on('mousedown', e => {
+  if (!G || G.over || V.pending || e.originalEvent.button) return;
+  const h = pickAt(e.containerPoint, false);
+  if (!h || !myUnit(h.o) || (h.o.kind === 'air' && h.o.d.role === 'strike') || (h.o.kind === 'uav' && h.o.d.role === 'kamikaze')) return;
+  V.drag = {u: h.o, p0: e.containerPoint, moved: false}; map.dragging.disable();
+});
+map.on('mousemove', e => { if (V?.drag && e.containerPoint.distanceTo(V.drag.p0) > 8) V.drag.moved = true; });
+map.on('mouseup', e => {
+  const d = V?.drag; if (!d) return; V.drag = null; map.dragging.enable();
+  if (!d.moved) return;
+  V.swallow = true; const pt = toXY(e.latlng.lat, e.latlng.lng), u = d.u;
+  if (u.kind === 'sam' || u.kind === 'radar') cmd({t: 'relocate', unit: u.id, ...pt}); else cmd({t: 'move', unit: u.id, ...pt});
+  AU.click(); select(u);
+});
 map.on('click', e => {
   if (!G || G.over) return;
+  if (V.swallow) { V.swallow = false; return; } // це було перетягування
   const pt = toXY(e.latlng.lat, e.latlng.lng);
   if (V.pending) {
-    const {kind, d} = V.pending, u = cmd({t: 'place', kind, def: d.id, ...pt});
-    if ((kind === 'sam' || kind === 'radar') && u) { AU.click(); select(u); return; }
-    if (G.res < d.cost) V.pending = null;
-    updateCards(); return;
+    const {kind, d} = V.pending;
+    if (!inObl(e.latlng.lat, e.latlng.lng)) { logMsg(`Тільки в межах області (${OPS[G.op].short}).`, 'bad'); return; }
+    confirmBuy(d.name, d.cost, kind === 'sam' ? 'Ракети/боєкомплект купуються окремо в панелі комплексу.' : kind === 'radar' ? `Бачить до ${d.det} км, дає цілевказівку ППО в радіусі ${LINK_KM} км.` : '', () => {
+      const u = cmd({t: 'place', kind, def: d.id, ...pt});
+      if ((kind === 'sam' || kind === 'radar') && u) { AU.click(); select(u); return; }
+      if (G.res < d.cost) V.pending = null;
+      updateCards();
+    });
+    return;
   }
   const hit = pickAt(e.containerPoint, false), en = pickAt(e.containerPoint, true);
   if (myUnit(V.sel) && en) { cmd({t: 'assign', unit: V.sel.id, target: en.o.id}); AU.click(); return; }
@@ -1378,7 +1437,7 @@ const bar = (k, col = 'var(--acc)') => `<div class="bar"><i style="width:${Math.
 function alive(u) { return u && (u.kind === 'strikepick' || (u.kind === 'sam' ? G.sams : u.kind === 'radar' ? G.radars : u.kind === 'air' ? G.air : u.kind === 'enemy' ? G.enemies : u.t ? G.cities : G.uavs).includes(u)); }
 const KIND_OBJ = {city: 'населений пункт', energy: 'енергетика', air: 'аеропорт', base: 'ваш аеродром', fuel: 'нафтобаза', rail: 'залізничний вузол', misc: 'обʼєкт', depot: 'склад озброєння'};
 const siteBtns = (act, d) => `<div class="sites">${SITES.map(s => `<button data-act="${act}:${s.id}"><b>${s.name}</b> <span class="k">~${s.km} км · ${Math.round(s.km / (d.cruise || 1000) * 60 + (d.cruise ? 0 : 10))} хв · пусків з напрямку ${s.dirs.join('/')}${G.siteMult[s.id] < 1 ? ` · вже −${Math.round((1 - G.siteMult[s.id]) * 100)}%` : ''}</span></button>`).join('')}</div>`;
-const selBtns = () => `<span style="display:flex;gap:4px"><button data-act="min" title="Згорнути / розгорнути">${V.selMin ? '▴' : '▾'}</button><button data-act="close" title="Закрити">✕</button></span>`;
+const selBtns = () => `<span style="display:flex;gap:4px">${V.sel?.x != null ? `<button data-act="follow" title="Камера стежить за цим обʼєктом" class="${V.follow === V.sel ? 'on' : ''}">🎥</button>` : ''}<button data-act="min" title="Згорнути / розгорнути">${V.selMin ? '▴' : '▾'}</button><button data-act="close" title="Закрити">✕</button></span>`;
 function renderSel() {
   const u = V?.sel, el = $('sel');
   if (!G || !alive(u) || (u.kind === 'enemy' && !u.det)) { if (V) V.sel = null; el.classList.add('hidden'); return; }
@@ -1488,9 +1547,10 @@ function renderSel() {
 $('sel').addEventListener('pointerdown', e => {
   const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
   const u = V.sel, [act, arg] = b.dataset.act.split(':'); AU.click();
+  if (act === 'follow') { V.follow = V.follow === u ? null : u; logMsg(V.follow ? 'Камера стежить за обраним. Потягніть карту, щоб зупинити.' : 'Стеження вимкнено.'); return renderSel(); }
   if (act === 'close') return select(null);
   if (act === 'min') { V.selMin = !V.selMin; return renderSel(); }
-  if (act === 'kam') { cmd({t: 'kamikaze', def: u.d.id, site: arg}); return select(null); }
+  if (act === 'kam') { const site = SITES.find(x => x.id === arg); confirmBuy(u.d.name, u.d.cost, `Удар по «${site.name}» (~${site.km} км).`, () => { cmd({t: 'kamikaze', def: u.d.id, site: arg}); select(null); }); return; }
   if (act === 'repair') { cmd({t: 'repair', obj: u.id}); return renderSel(); }
   cmd({t: 'act', unit: u.id, act, arg});
   if (act === 'sell') return select(null);
@@ -1538,11 +1598,17 @@ function drawScene(rdt) {
     }
     for (const r of G.radars) {
       circle(r.x, r.y, r.d.det, r.on ? 'rgba(200,140,255,.55)' : 'rgba(200,140,255,.2)', r === V.sel ? 'rgba(200,140,255,.06)' : null, [3, 7]);
+      if (r.on && !r.mv) { // промінь огляду, що обертається (~6 об/хв), і відмітки цілей, які РЛС бачить
+        const p = P(r.x, r.y), R = r.d.det * kmPx(), a0 = (performance.now() / 1000 * .63 + r.id) % (Math.PI * 2);
+        const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, R); gr.addColorStop(0, 'rgba(200,140,255,.35)'); gr.addColorStop(1, 'rgba(200,140,255,0)');
+        g.fillStyle = gr; g.beginPath(); g.moveTo(p.x, p.y); g.arc(p.x, p.y, R, a0 - .35, a0); g.closePath(); g.fill();
+        for (const e of G.enemies) if (e.seen?.includes(r)) { const q = P(e.x, e.y); g.strokeStyle = 'rgba(200,140,255,.9)'; g.strokeRect(q.x - 9, q.y - 9, 18, 18); }
+      }
       if (r.on) circle(r.x, r.y, Math.min(r.d.det, horizon(.05, r.d.ant)), 'rgba(200,140,255,.35)', null, [1, 5]); // межа видимості КР на 50 м
     }
     for (const u of G.uavs) {
       if (u.d.role === 'recon') circle(u.x, u.y, u.d.sensor, 'rgba(94,224,138,.6)', null, [4, 4]);
-      if (u.d.role === 'interceptor') circle(u.hx, u.hy, 10, 'rgba(94,224,138,.35)', null, [2, 5]);
+      if (u.d.role === 'interceptor') circle(u.x, u.y, 10, 'rgba(94,224,138,.35)', null, [2, 5]);
     }
     for (const a of G.air) if (['patrol', 'move', 'intercept'].includes(a.state) && a.d.radar > 10) circle(a.x, a.y, a.d.radar, 'rgba(79,209,224,.3)', null, [2, 6]);
   }
@@ -1555,7 +1621,18 @@ function drawScene(rdt) {
     }
     g.setLineDash([]); g.lineWidth = 1;
   }
+  if (V.drag?.moved && V.cursor) { const a = P(V.drag.u.x, V.drag.u.y), b = P(V.cursor.x, V.cursor.y); g.strokeStyle = '#ffb347'; g.lineWidth = 2; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); g.setLineDash([]); g.lineWidth = 1;
+    if (V.drag.u.kind === 'sam' && V.drag.u.load) circle(V.cursor.x, V.cursor.y, samMaxRange(V.drag.u) || samRange(V.drag.u.d), '#ffb347', 'rgba(255,179,71,.06)', [4, 4]); }
   if (V.pending?.kind === 'sam' && V.cursor) circle(V.cursor.x, V.cursor.y, samRange(V.pending.d), '#ffb347', 'rgba(255,179,71,.08)', [6, 4]);
+  if (V.pending?.kind === 'radar' && V.cursor) { // що побачить РЛС, якщо поставити тут
+    const d = V.pending.d, c = V.cursor, lo = Math.min(d.det, horizon(.05, d.ant)), sm = d.det * d.small;
+    circle(c.x, c.y, d.det, '#c88cff', 'rgba(200,140,255,.07)', [6, 4]); circle(c.x, c.y, sm, 'rgba(200,140,255,.8)', null, [2, 4]); circle(c.x, c.y, lo, 'rgba(255,120,120,.9)', null, [1, 4]);
+    circle(c.x, c.y, LINK_KM, 'rgba(94,224,138,.6)', null, [8, 6]);
+    const p = P(c.x, c.y), k = kmPx(); g.font = '11px system-ui'; g.textAlign = 'left'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.7)';
+    for (const [r, txt, col] of [[d.det, `літаки, ракети — ${d.det} км`, '#d9b3ff'], [sm, `малі дрони — ${Math.round(sm)} км`, '#d9b3ff'], [lo, `КР біля землі (50 м) — ${Math.round(lo)} км`, '#ff9a9a'], [LINK_KM, `цілевказівка ППО — ${LINK_KM} км`, '#8ef0b0']]) {
+      const y = p.y - r * k - 3; g.strokeText(txt, p.x + 4, y); g.fillStyle = col; g.fillText(txt, p.x + 4, y);
+    }
+  }
   const b = P(BASE.x, BASE.y), atBase = G.air.filter(a => a.state === 'base' || a.state === 'service').length;
   g.strokeStyle = '#4fd1e0'; g.lineWidth = 3; g.beginPath(); g.moveTo(b.x - 10, b.y + 6); g.lineTo(b.x + 10, b.y - 6); g.stroke(); g.lineWidth = 1;
   g.fillStyle = '#4fd1e0'; g.font = '11px system-ui'; g.textAlign = 'center'; g.fillText(`✈ ${BASE.name.replace(/^Аеродром\s*/, '')}${atBase ? ` (${atBase})` : ''}`, b.x, b.y + 18);
@@ -1654,6 +1731,7 @@ function hud() {
     ${SITES.filter(s => G.siteMult[s.id] < 1).map(s => `<span style="color:var(--ok)">${s.name.split(' ')[0]} −${Math.round((1 - G.siteMult[s.id]) * 100)}%</span>`).join(' ')}`;
   paintAlerts();
   $('startWave').classList.toggle('hidden', G.phase !== 'deploy' || G.wave >= WAVES.length);
+  $('skipWave').classList.toggle('hidden', G.phase !== 'wave'); $('skipWave').textContent = V.ff ? '⏸ Зупинити прокрутку' : '⏭ До кінця хвилі';
   $('startWave').textContent = `▶ Почати хвилю ${G.wave + 1}`;
   updateCards();
   if (!$('sel').matches(':hover')) renderSel();
@@ -1663,7 +1741,8 @@ setInterval(hud, 250);
 let last = performance.now();
 function frame(now) {
   const rdt = Math.min(.05, (now - last) / 1000); last = now;
-  if (G && !V.paused && !G.over && V.speed) tick(rdt * V.speed); // у мережевій грі крок робитиме сервер
+  if (G && V.ff && !G.over && !V.paused) { for (let i = 0; i < 6 && G.phase === 'wave' && !G.over; i++) tick(30); if (G.phase !== 'wave') { V.ff = false; logMsg('Хвилю прокручено до кінця.', 'ok'); } }
+  else if (G && !V.paused && !G.over && V.speed) tick(rdt * V.speed); // у мережевій грі крок робитиме сервер
   if (G) {
     drainEvents();
     for (const b of V.booms) b.t += rdt;
@@ -1672,6 +1751,7 @@ function frame(now) {
     V.booms = V.booms.filter(b => b.t < b.life); V.parts = V.parts.filter(p => p.t < p.life); V.tracers = V.tracers.filter(t => t.t < .3);
     V.shake *= Math.pow(.02, rdt); V.flash *= Math.pow(.05, rdt);
   }
+  if (V?.follow) { if (alive(V.follow) && V.follow.x != null) map.panTo(toLL(V.follow.x, V.follow.y), {animate: false}); else V.follow = null; }
   draw(rdt); requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

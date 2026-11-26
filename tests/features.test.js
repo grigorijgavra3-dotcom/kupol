@@ -63,18 +63,14 @@ for (let i = 0; i < 20000 && g.siteMult.navlia === 1 && (g.strikes.length || su.
 console.log('удар Су-24 по Навлі: множник наступної хвилі', g.siteMult.navlia.toFixed(2));
 assert(su.state === 'rtb' || su.state === 'service' || su.state === 'base');
 
-// 8. обслуговування: 1 ⛁ з борту; «Ветеран»: пропуск наступної хвилі, але не фінальної
+// 8. обслуговування: 1 ⛁ з борту; «Ветеран» — без пропуску хвилі
 g = S.newGame(4); S.use(g); g.res = 500;
 const f = S.command({t: 'buyAir', def: 'mig29'});
 S.command({t: 'move', unit: f.id, x: S.BASE.x + 20, y: S.BASE.y}); run(g, 200);
 S.command({t: 'act', unit: f.id, act: 'rtb'});
 const r1 = g.res; run(g, 400);
 assert(f.state === 'service' && g.res === r1 - 1, 'обслуговування коштує 1 ⛁');
-assert.strictEqual(f.groundUntil, 1, 'Ветеран: пропускає хвилю 1');
-run(g, 2000); assert(S.grounded(f));
-S.command({t: 'move', unit: f.id, x: 0, y: 0}); assert.strictEqual(f.state, 'base', 'на землі під час пропуску');
-g.wave = 7; g.phase = 'deploy'; f.groundUntil = 0; f.state = 'rtb'; f.x = S.BASE.x; f.y = S.BASE.y; run(g, 1);
-assert(!f.groundUntil, 'перед фінальною хвилею обмеження немає');
+assert(!f.groundUntil && !S.grounded(f), 'Ветеран: хвилю більше не пропускає (лише довше обслуговування)');
 
 console.log('OK — нові механіки працюють');
 
