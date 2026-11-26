@@ -111,15 +111,15 @@ const AIR = [
   info:[['Роль','літак ДРЛО (радіолокаційний дозор)'],['Радар','Erieye, ~350 км'],['Швидкість','~528 км/год'],['Тривалість','~5 год'],['Стеля','~7,6 км'],['Розмах / довжина','21,44 / 19,73 м'],['У грі','бачить низьколетючі КР далеко за радіогоризонтом наземних РЛС']]},
  {id:'su24',name:'Су-24М',role:'strike',country:'СРСР',vmax:1654,cruise:870,dash:1315,ceil:11,span:17.64,len:22.67,count:2,radar:0,msl:0,aam:[],fuel:7200,ptb:2,cost:40,power:.3,pSucc:.7,
   info:[['Роль','фронтовий бомбардувальник'],['Макс. швидкість','1654 км/год на висоті, 1315 біля землі'],['Бойовий радіус','~560 км'],['Стеля','11 км'],['Розмах / довжина','17,64 (16°) / 22,67 м'],['Озброєння','Storm Shadow / SCALP, ~250 км'],['У грі','удар по пускових → менше цілей']]},
- {id:'su25',name:'Су-25',role:'hunter',country:'СРСР',vmax:950,cruise:750,dash:900,ceil:7,span:14.36,len:15.36,count:2,radar:10,msl:2,aam:['r60'],gun:{name:'ГШ-30-2',rounds:250,bursts:8,pk:.3},fuel:5400,ptb:2,cost:25,
+ {id:'su25',name:'Су-25',role:'hunter',country:'СРСР',vmax:950,cruise:750,dash:900,ceil:7,span:14.36,len:15.36,count:2,radar:10,msl:2,aam:['r60'],gun:{name:'ГШ-30-2',rounds:250,bursts:10,pk:.35},fuel:5400,ptb:2,cost:25,
   info:[['Роль','штурмовик'],['Макс. швидкість','~950 км/год'],['Крейсерська','~750 км/год'],['Бойовий радіус','~750 км'],['Стеля','7 км'],['Розмах / довжина','14,36 / 15,36 м']]},
- {id:'l39',name:'L-39 «Альбатрос»',role:'hunter',country:'Чехословаччина',vmax:750,cruise:600,dash:700,ceil:11,span:9.46,len:12.13,count:2,radar:8,msl:2,aam:['r60'],gun:{name:'ГШ-23',rounds:150,bursts:5,pk:.3},fuel:9000,ptb:0,cost:15,
+ {id:'l39',name:'L-39 «Альбатрос»',role:'hunter',country:'Чехословаччина',vmax:750,cruise:600,dash:700,ceil:11,span:9.46,len:12.13,count:2,radar:8,msl:2,aam:['r60'],gun:{name:'ГШ-23',rounds:150,bursts:8,pk:.3},fuel:9000,ptb:0,cost:15,
   info:[['Роль','навчально-бойовий'],['Макс. швидкість','750 км/год'],['Крейсерська','~600 км/год'],['Дальність','1100 км'],['Стеля','~11 км'],['Розмах / довжина','~9,46 / ~12,13 м'],['ПТБ','кінцеві баки вже на крилі']]},
- {id:'yak52',name:'Як-52',role:'hunter',country:'СРСР/Румунія',vmax:285,cruise:190,dash:270,ceil:4,span:9.3,len:7.75,count:3,radar:5,msl:0,aam:[],gun:{name:'стрілець у задній кабіні',rounds:300,bursts:10,pk:.15},fuel:9000,ptb:0,cost:8,
+ {id:'yak52',name:'Як-52',role:'hunter',country:'СРСР/Румунія',vmax:285,cruise:190,dash:270,ceil:4,span:9.3,len:7.75,count:3,radar:5,msl:0,aam:[],gun:{name:'стрілець у задній кабіні',rounds:300,bursts:14,pk:.22},fuel:9000,ptb:0,cost:8,
   info:[['Роль','навчальний, «мисливець» на розвідувальні дрони'],['Макс. швидкість','~285 км/год'],['Крейсерська','~190 км/год'],['Дальність','~550 км'],['Стеля','~4 км'],['Розмах / довжина','~9,3 / ~7,75 м'],['У грі','дешевий, але повільний і шанс влучити малий']]},
- {id:'mi24',name:'Мі-24',role:'hunter',heli:true,country:'СРСР',vmax:335,cruise:270,dash:320,ceil:4.5,span:17.3,len:17.5,count:2,radar:8,msl:2,aam:['igla'],gun:{name:'ЯкБ-12,7',rounds:1470,bursts:15,pk:.3},fuel:7200,ptb:2,cost:20,
+ {id:'mi24',name:'Мі-24',role:'hunter',heli:true,country:'СРСР',vmax:335,cruise:270,dash:320,ceil:4.5,span:17.3,len:17.5,count:2,radar:8,msl:2,aam:['igla'],gun:{name:'ЯкБ-12,7',rounds:1470,bursts:20,pk:.35},fuel:7200,ptb:2,cost:20,
   info:[['Роль','ударний гелікоптер'],['Макс. швидкість','~335 км/год'],['Крейсерська','~270 км/год'],['Дальність','~450 км'],['Стеля','~4,5 км'],['Гвинт / довжина','~17,3 / ~17,5 м']]},
- {id:'mi8',name:'Мі-8',role:'hunter',heli:true,country:'СРСР',vmax:250,cruise:225,dash:250,ceil:4.2,span:21.3,len:18.3,count:3,radar:6,msl:0,aam:[],gun:{name:'кулемети ПКТ',rounds:2000,bursts:20,pk:.25},fuel:9000,ptb:2,cost:15,
+ {id:'mi8',name:'Мі-8',role:'hunter',heli:true,country:'СРСР',vmax:250,cruise:225,dash:250,ceil:4.2,span:21.3,len:18.3,count:3,radar:6,msl:0,aam:[],gun:{name:'кулемети ПКТ',rounds:2000,bursts:24,pk:.3},fuel:9000,ptb:2,cost:15,
   info:[['Роль','багатоцільовий вертоліт'],['Макс. швидкість','~250–270 км/год'],['Крейсерська','~225 км/год'],['Дальність','~425–715 км'],['Стеля','~4,2 км'],['Гвинт / фюзеляж','~21,3 / ~18,3 м']]},
 ];
 AIR.forEach(d => { d.ptbK = d.heli ? .25 : .3; d.ptbSlot = d.heli ? 1 : 2; d.info.push(['Паливо', `~${(d.fuel / 3600).toFixed(1)} год польоту${d.ptb ? `, до ${d.ptb} ПТБ (+${d.ptbK * 100}% кожен, −${d.ptbSlot} ракети)` : ''}`]); });
@@ -486,7 +486,7 @@ function command(c) {
     const d = AIR.find(a => a.id === c.def);
     if (!d || G.air.filter(a => a.d === d).length >= d.count || !pay(d.cost)) return null;
     const a = {id: newId(), kind: 'air', d, x: BASE.x, y: BASE.y, tx: BASE.x, ty: BASE.y, state: 'base', fuel: d.fuel, ptb: 0, load: {}, want: {}, gun: 0, gunWant: false,
-      cd: 0, orb: 0, rot: 0, aimT: 0, gunT: 0, lock: null, tgt: null, rtbShots: 0, gunMode: d.role === 'hunter', filt: {drone: true, cruise: true}, turn: d.heli ? .6 : d.role === 'strike' || d.role === 'awacs' ? .25 : .3};
+      cd: 0, orb: 0, rot: 0, aimT: 0, gunT: 0, lock: null, tgt: null, rtbShots: 0, gunMode: d.role === 'hunter', filt: {drone: true, cruise: true}, hunt: true, autoRet: true, duty: null, turn: d.heli ? .6 : d.role === 'strike' || d.role === 'awacs' ? .25 : .3};
     G.air.push(a);
     say(`${d.name} прибув на ${BASE.name}.${d.aam.length || d.gun ? ` Купіть ${d.aam.length ? 'ракети' : ''}${d.aam.length && d.gun ? ' і ' : ''}${d.gun ? 'набої' : ''} в панелі борту.` : ''}`, 'warn');
     return a;
@@ -539,7 +539,8 @@ function command(c) {
     if (u.kind === 'air' && u.d.role !== 'strike') {
       if (!canFly(u)) return null;
       if (u.state === 'base') { if (!sum(u.load) && !u.gun) say(`${u.d.name} злітає ${u.d.role === 'awacs' ? 'на чергування' : 'без озброєння — лише розвідка радаром'}.`, u.d.role === 'awacs' ? 'ok' : 'warn'); else say(`${u.d.name}: зліт з ${BASE.name}.`, 'ok'); }
-      u.state = 'move'; u.tx = c.x; u.ty = c.y; u.tgt = null;
+      if (u.state === 'base') u.armed = !!(sum(u.load) || u.gun); // без озброєння — лише розвідка радаром
+      u.state = 'move'; u.tx = c.x; u.ty = c.y; u.tgt = null; u.duty = {x: c.x, y: c.y};
     } else if (u.kind === 'uav' && u.d.role !== 'kamikaze') { u.hx = c.x; u.hy = c.y; u.tgt = null; u.forced = false; }
     else if ((u.kind === 'sam' || u.kind === 'radar') && u.d.mobile) {
       if (!inObl(...toLatLng(c.x, c.y))) { say(`Тільки в межах області (${OP.short}).`, 'bad'); return null; }
@@ -593,7 +594,9 @@ function unitAct(u, act, arg) {
     else if (act === 'ptb-' && base && u.ptb > 0) { u.ptb--; u.fuel = maxFuel(u); }
     else if (act === 'gun' && base) { if (buyGun(u)) u.gunWant = true; }
     else if (act === 'gm') u.gunMode = !u.gunMode;
-    else if (act === 'rtb' && !['base', 'service', 'rtb'].includes(u.state)) goHome(u, 'наказ');
+    else if (act === 'rtb' && !['base', 'service', 'rtb'].includes(u.state)) { u.duty = null; goHome(u, 'наказ'); }
+    else if (act === 'hunt') u.hunt = !u.hunt;
+    else if (act === 'autoRet') u.autoRet = !u.autoRet;
     else if (act === 'strike' && base && d.role === 'strike' && canFly(u)) {
       const site = SITES.find(s => s.id === arg) || SITES[0], ex = exitTo(site);
       u.state = 'strikeOut'; u.site = site.id; u.tx = ex.x; u.ty = ex.y; say(`${d.name}: виліт на рубіж пуску Storm Shadow по «${site.name}».`, 'ok');
@@ -878,6 +881,21 @@ function shotDownBY(o, name) {
   say(`${name} збито ППО противника над ${zGen(zoneNear(o).z).replace(/і$/, 'ю')}.`, 'bad');
 }
 
+// радіус вільного полювання від точки чергування, км: винищувачі — далеко, мисливці — ближче
+const huntR = d => d.role === 'fighter' ? Math.max(40, Math.min(70, d.radar * .6)) : d.heli ? 20 : 30;
+// найкраща ціль для вільного полювання: крилаті ракети й важкі БЧ — першими; дрони без ракет — лише гарматою, якщо наздоганяємо
+function huntTarget(a, home) {
+  const d = a.d, R = huntR(d), hasMsl = sum(a.load) > 0; let best = null, bs = 1e9;
+  for (const e of G.enemies) {
+    if (e.dead || !e.det || e.def.kind === 'bal' || e.eng >= 1 || e.alt > d.ceil || !okFor(a, e) || dist(e, home) > R) continue;
+    const gunOnly = !hasMsl || !Object.keys(a.load).some(k => a.load[k] > 0 && mslPk(AAM[k], e.def.kind) > 0);
+    if (gunOnly && (!a.gun || e.def.kind !== 'drone' || e.v * 3600 > d.dash * .9)) continue;
+    if (!gunOnly && intercept(a, e, d.dash / 3600) === null && dist(a, e) > 15) continue; // не наздожене
+    const sc = dist(a, e) - (e.def.kind === 'cruise' ? 60 : 0) - (e.def.warhead > 100 ? 25 : 0) - (e.ident && e.def.decoy ? -100 : 0);
+    if (sc < bs) { bs = sc; best = e; }
+  }
+  return best;
+}
 // крок часу: dt ігрових секунд, ділиться на підкроки ≤ 0,1 с
 function tick(gdt) {
   if (!G || G.over || !(gdt > 0)) return;
@@ -986,7 +1004,12 @@ function step(dt) {
         if (G.res < fee) { if (!a.feeWarn) { a.feeWarn = true; say(`${d.name}: немає ${fee} ⛁ на пальне й обслуговування — чекає.`, 'bad'); } continue; }
         G.res -= fee; G.spent += fee; a.feePaid = true;
       }
-      if ((a.svc -= dt) <= 0) { a.state = 'base'; a.fuel = maxFuel(a); serviceRearm(a); say(`${d.name} готовий до вильоту${grounded(a) ? ` (але пропускає хвилю ${a.groundUntil})` : ''}.`, 'ok'); }
+      if ((a.svc -= dt) <= 0) {
+        a.state = 'base'; a.fuel = maxFuel(a); serviceRearm(a);
+        if (a.autoRet && a.duty && G.phase === 'wave' && !grounded(a) && (sum(a.load) || a.gun || d.role === 'awacs')) {
+          a.state = 'move'; a.tx = a.duty.x; a.ty = a.duty.y; a.armed = !!(sum(a.load) || a.gun); say(`${d.name}: обслуговування завершено — повертається на чергування.`, 'ok');
+        } else say(`${d.name} готовий до вильоту${grounded(a) ? ` (але пропускає хвилю ${a.groundUntil})` : ''}.`, 'ok');
+      }
       continue;
     }
     const bz = byCheck(a, d.name, dt);
@@ -1016,8 +1039,9 @@ function step(dt) {
       if (a.gun <= 0) return;
       if (dist(a, e) > (d.heli || d.id === 'yak52' ? 1.2 : 1)) { a.aimT = 0; return; }
       a.aimT += dt;
-      if (a.aimT < 4) return;
-      if ((a.gunT += dt) >= 3) {
+      const slow = d.role === 'hunter', aim = slow ? 2.5 : 4, rate = slow ? 2.2 : 3;
+      if (a.aimT < aim) return;
+      if ((a.gunT += dt) >= rate) {
         a.gunT = 0; a.gun--; snd('gun'); emit('tracer', a.x, a.y, e.x, e.y);
         if (Math.random() < gunPk(d, e.def.kind)) { kill(e, `${d.name} (${d.gun.name})`); a.aimT = 0; }
         if (!a.gun) say(`${d.name}: набої скінчились.`, 'warn');
@@ -1033,7 +1057,9 @@ function step(dt) {
       }
     } else if (a.state === 'intercept') {
       const e = a.tgt;
-      if (!e || e.dead || !G.enemies.includes(e)) { a.tgt = null; a.aimT = 0; a.state = 'patrol'; a.tx = a.x; a.ty = a.y; continue; }
+      const backToDuty = () => { a.tgt = null; a.aimT = 0; dropLock(a); if (a.duty) { a.state = 'move'; a.tx = a.duty.x; a.ty = a.duty.y; } else { a.state = 'patrol'; a.tx = a.x; a.ty = a.y; } };
+      if (!e || e.dead || !G.enemies.includes(e)) { backToDuty(); continue; }
+      if (a.auto && a.duty && dist(e, a.duty) > huntR(d) * 1.4) { backToDuty(); continue; } // ціль пішла з зони відповідальності
       // на дрон повільніше — щоб не проскочити і встигнути прицілитись
       const close = dist(a, e) < 5 && e.def.kind === 'drone', sp = close ? Math.min(vd, Math.max(e.v * 1.3, Math.min(vd, 300 / 3600))) : vd;
       const p = lead(a, e, sp); moveTo(a, p.x, p.y, sp, dt);
@@ -1047,6 +1073,12 @@ function step(dt) {
           for (const e of G.enemies) if (!e.dead && e.det && e.def.kind === 'drone' && !(e.ident && e.def.decoy) && e.v * 3600 <= d.dash && dist(e, home) < bd) { bd = dist(e, home); a.tgt = e; }
         }
       } else if (a.tgt && !G.enemies.includes(a.tgt)) a.tgt = null;
+      if (a.armed && !sum(a.load) && !a.gun) { goHome(a, 'боєкомплект вичерпано'); continue; }
+      // вільне полювання: ціль, яку бачимо (своїм радаром чи мережею РЛС), у зоні чергування — сам іде на перехоплення
+      if (a.hunt && !(a.tgt && a.gunMode && a.gun > 0) && d.role !== 'awacs') {
+        const e = huntTarget(a, home);
+        if (e) { a.tgt = e; a.state = 'intercept'; a.auto = true; if (!a.duty) a.duty = home; continue; }
+      }
       if (a.tgt && a.gunMode && a.gun > 0) {
         const close = dist(a, a.tgt) < 5, sp = close ? Math.min(vd, Math.max(a.tgt.v * 1.3, Math.min(v, 300 / 3600))) : v;
         const p = lead(a, a.tgt, sp); moveTo(a, p.x, p.y, sp, dt); gunAt(a.tgt);

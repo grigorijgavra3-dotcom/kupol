@@ -1452,7 +1452,7 @@ function renderSel() {
     if (u.state === 'service') h += `<div class="k">Заправка й обслуговування (1 ⛁ з борту)${u.feePaid ? '' : ' — чекає оплати'}</div>${bar(1 - u.svc / (900 * DIFF[G.diff].svcK), 'var(--warn)')}`;
     if (grounded(u)) h += `<div style="color:var(--bad)">«Ветеран»: після посадки пропускає хвилю ${u.groundUntil}.</div>`;
     if (u.lock) h += `<div class="k">Захоплення: ${label(u.lock.e)}</div>${bar(1 - u.lock.t / u.lock.t0, 'var(--warn)')}`;
-    if (u.aimT > 0 && u.tgt) h += `<div class="k">Прицілювання гарматою…</div>${bar(Math.min(1, u.aimT / 4), 'var(--warn)')}`;
+    if (u.aimT > 0 && u.tgt) h += `<div class="k">Прицілювання гарматою…</div>${bar(Math.min(1, u.aimT / (d.role === 'hunter' ? 2.5 : 4)), 'var(--warn)')}`;
     if (d.ptb) h += `<div class="mrow"><div><b>Підвісні баки (ПТБ)</b><small>${u.ptb}/${d.ptb} · +${d.ptbK * 100}% палива кожен, −${d.ptbSlot} ракети</small></div>
       <button data-act="ptb-" ${atBase && u.ptb ? '' : 'disabled'}>−</button><button data-act="ptb+" ${atBase && u.ptb < d.ptb && sum(u.load) <= maxMsl(u) - d.ptbSlot ? '' : 'disabled'}>+</button></div>`;
     if (d.aam.length) {
@@ -1470,6 +1470,9 @@ function renderSel() {
       h += `<div class="k">Радар ${d.radar} км: бачить низьколетючі крилаті ракети, яких не бачать наземні РЛС. Клік по карті — зона чергування.</div>`;
     } else {
       h += `<div class="k">Автоматично збивати:</div>${chips(u, ['drone', 'cruise'])}`;
+      h += `<div class="btns"><button class="chip ${u.hunt ? 'on' : ''}" data-act="hunt" title="Сам іде на перехоплення цілей, які бачить, у радіусі ${huntR(d)} км від точки чергування">Вільне полювання (${huntR(d)} км)</button>
+        <button class="chip ${u.autoRet ? 'on' : ''}" data-act="autoRet" title="Після заправки й обслуговування сам повертається на точку чергування, поки триває хвиля">Повертатися на чергування</button></div>`;
+      if (u.duty) h += `<div class="k">Точка чергування задана${u.state === 'intercept' && u.auto ? ' · зараз на перехопленні, потім повернеться' : ''}.</div>`;
       if (d.gun) h += `<div class="btns"><button class="chip ${u.gunMode ? 'on' : ''}" data-act="gm">Полювати на дрони гарматою</button></div>`;
       h += `<div class="k">Клік по карті — летіти туди. Клік по цілі — перехопити.</div>`;
     }
@@ -1607,7 +1610,11 @@ function drawScene(rdt) {
     const p = P(sel.x, sel.y); g.strokeStyle = sel.kind === 'enemy' ? '#ff5a5a' : '#ffb347'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, 22, 0, 7); g.stroke(); g.lineWidth = 1;
     const tg = sel.force || sel.tgt;
     if (tg && !tg.dead && sel.kind !== 'enemy') { const q = P(tg.x, tg.y); g.strokeStyle = '#ffb347'; g.setLineDash([6, 4]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); g.beginPath(); g.arc(q.x, q.y, 12, 0, 7); g.stroke(); }
-    else if (sel.kind === 'air' && sel.state === 'move') { const q = P(sel.tx, sel.ty); g.strokeStyle = 'rgba(255,179,71,.6)'; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); }
+    if (sel.kind === 'air' && sel.duty && sel.hunt && sel.d.role !== 'awacs') { // зона вільного полювання
+      circle(sel.duty.x, sel.duty.y, huntR(sel.d), 'rgba(255,179,71,.55)', 'rgba(255,179,71,.05)', [6, 6]);
+      const q = P(sel.duty.x, sel.duty.y); g.strokeStyle = '#ffb347'; g.beginPath(); g.moveTo(q.x - 6, q.y); g.lineTo(q.x + 6, q.y); g.moveTo(q.x, q.y - 6); g.lineTo(q.x, q.y + 6); g.stroke();
+    }
+    if (tg && !tg.dead && sel.kind !== 'enemy') {} else if (sel.kind === 'air' && sel.state === 'move') { const q = P(sel.tx, sel.ty); g.strokeStyle = 'rgba(255,179,71,.6)'; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); g.setLineDash([]); }
   }
   for (const s of G.shots) {
     g.strokeStyle = 'rgba(230,240,250,.7)'; g.lineWidth = 2; g.beginPath();
