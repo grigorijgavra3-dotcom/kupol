@@ -63,6 +63,7 @@ button.on{border-color:var(--acc);color:var(--acc)}
 .card small{color:var(--dim);font-size:11px}.card .badge{font-size:12px;color:var(--acc);white-space:nowrap;text-align:right}
 #hint{color:var(--dim);font-size:12px;margin-top:8px;min-height:34px}
 #bottom{position:absolute;left:10px;bottom:10px;display:flex;gap:6px;align-items:center}
+#hud #bottom{pointer-events:none}#hud #bottom>*{pointer-events:auto} /* контейнер кнопок не перекриває карту */
 #bottom button{padding:6px 10px}
 #startWave{background:#3a2a0c;border-color:var(--warn);color:var(--warn);font-weight:600}
 #log{position:absolute;left:10px;bottom:56px;width:380px;font-size:12px;display:flex;flex-direction:column;gap:2px;pointer-events:none}
@@ -158,8 +159,8 @@ body:not(.atk) #side [data-tab=atk]{display:none}
     <div class="row"><span>Загальна гучність</span><input type="range" min="0" max="1" step="0.05" data-set="master"></div>
     <div class="row"><span>Ефекти</span><input type="range" min="0" max="1" step="0.05" data-set="sfx"></div>
     <div class="row"><span>Музика</span><input type="range" min="0" max="1" step="0.05" data-set="music"></div>
-    <div class="row"><span>Сирена повітряної тривоги</span><input type="checkbox" data-set="siren"></div>
-    <div class="row"><span>Гучність сирени</span><input type="range" min="0" max="1" step="0.05" data-set="sirenVol"></div>
+    <div class="row"><span>Звуки тривоги (початок, «червона», відбій — по одному разу)</span><input type="checkbox" data-set="siren"></div>
+    <div class="row"><span>Гучність тривоги</span><input type="range" min="0" max="1" step="0.05" data-set="sirenVol"></div>
     <div class="row"><span>Гучність голосу</span><input type="range" min="0" max="1" step="0.05" data-set="voiceVol"></div>
     <div class="row"><span>Показувати зони ураження</span><input type="checkbox" data-set="ranges"></div>
     <div class="row"><span>Підписи цілей</span><input type="checkbox" data-set="labels"></div>
@@ -440,7 +441,7 @@ const mi = m => `<img class="mi" src="${mslPic(m)}" alt="">`;
 const toLL = (x, y) => L.latLng(LAT0 + y / KY, LNG0 + x / KX);
 // ================= SETTINGS & AUDIO =================
 const SET = {master: .8, sfx: .8, music: .35, siren: true, ranges: true, labels: true, shake: true, shadows: true, routes: true, diff: 2, cx3d: true,
-  v3_air: true, v3_heli: true, v3_uav: true, v3_enemy: true, v3_sam: true, voice: true, alerts: true, confirm: true, sirenVol: .35, voiceVol: .7, voiceName: 'tetiana',
+  v3_air: true, v3_heli: true, v3_uav: true, v3_enemy: true, v3_sam: true, voice: false, alerts: true, confirm: true, sirenVol: .35, redSiren: true, voiceVol: .7, voiceName: 'tetiana',
   adv: {pk: {}, debris: null, balWarn: null, hunt: null, balSlow: true}};
 try { Object.assign(SET, JSON.parse(localStorage.getItem('kupol-settings') || '{}')); } catch (e) {}
 SET.adv = {pk: {}, balSlow: true, ...(SET.adv || {})}; SET.adv.pk ||= {};
@@ -520,11 +521,15 @@ const AU = {
   coin() { this.tone(1320, .08, .06, 'triangle'); },
   chime() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, .5, .12), i * 140)); },
   warn() { [0, 1, 2].forEach(i => setTimeout(() => this.tone(1000, .12, .1, 'square'), i * 200)); },
-  siren() { // електромеханічна вулична сирена (audio/siren.mp3), тихо, з відлунням міста
+  // звуки тривоги — кожен лунає ОДИН раз: початок хвилі, перша «червона» загроза хвилі, відбій
+  alarm(kind) {
     if (!SET.siren || V?.ff || G?.mode === 'attack') return;
-    try { if (this.sirenEl) this.sirenEl.pause(); } catch (e) {}
-    const a = new Audio('audio/siren.mp3'); a.volume = Math.min(1, SET.master * SET.sfx * (SET.sirenVol ?? .35)); this.sirenEl = a; a.play().catch(() => {});
+    if (kind === 'red') { if (V.redDone) return; V.redDone = true; }
+    if (kind === 'start') V.redDone = false;
+    try { if (this.alarmEl) this.alarmEl.pause(); } catch (e) {}
+    const a = new Audio(`audio/alarm_${kind}.mp3`); a.volume = Math.min(1, SET.master * SET.sfx * (SET.sirenVol ?? .35) * (kind === 'red' ? .55 : kind === 'clear' ? 1.4 : 1)); this.alarmEl = a; a.play().catch(() => {});
   },
+  siren() { this.alarm('start'); },
   music() {
     const c = this.ctx;
     [55, 82.4, 110.6, 164.8].forEach((fr, i) => {
@@ -625,7 +630,7 @@ const G3 = (() => {
   const discM = new T.MeshBasicMaterial({color: 0x111111, transparent: true, opacity: .16, side: T.DoubleSide, depthWrite: false});
   const shadowM = new T.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: .33, depthWrite: false, side: T.DoubleSide});
   const flameM = new T.MeshBasicMaterial({color: 0xffa040, transparent: true, opacity: .85, blending: T.AdditiveBlending, depthWrite: false});
-  const mslM = new T.MeshStandardMaterial({color: 0xdedad0, roughness: .5, metalness: .2});
+  const mslM = new T.MeshStandardMaterial({color: 0xdedad0, roughness: .5, metalness: .2}), bandM = new T.MeshStandardMaterial({color: 0xb23a2a, roughness: .6});
   const tankM = new T.MeshStandardMaterial({color: 0x9aa1a6, roughness: .55, metalness: .3});
   const uaBlue = new T.MeshBasicMaterial({color: 0x0057b7}), uaYellow = new T.MeshBasicMaterial({color: 0xffd700});
   // кокарди-наклейки: зсув глибини, щоб їх не перекривала поверхня крила
@@ -745,8 +750,12 @@ const G3 = (() => {
     if (!mslTpl[id]) {
       const [len, d] = dim || MSL3[id] || SAM_MSL[id]?.dim || [3, .15], g = new T.Group();
       const body = new T.Mesh(new T.CylinderGeometry(d / 2, d / 2, len * .85, 8), mslM); body.position.y = -len * .075; g.add(body);
-      const nose = new T.Mesh(new T.ConeGeometry(d / 2, len * .15, 8), mslM); nose.position.y = len * .425; g.add(nose);
-      for (const a of [0, Math.PI / 2]) { const f = new T.Mesh(new T.BoxGeometry(d * 3.2, len * .12, .02), mslM); f.position.y = -len * .42; f.rotation.y = a; g.add(f); }
+      const nose = new T.Mesh(new T.ConeGeometry(d / 2, len * .15, 12), mslM); nose.position.y = len * .425; g.add(nose);
+      const tip = new T.Mesh(new T.ConeGeometry(d * .32, len * .06, 12), darkM); tip.position.y = len * .47; g.add(tip); // ГСН
+      const band = new T.Mesh(new T.CylinderGeometry(d * .51, d * .51, len * .03, 12), bandM); band.position.y = len * .18; g.add(band);
+      for (const a of [Math.PI / 4, -Math.PI / 4]) { const f = new T.Mesh(new T.BoxGeometry(d * 3.2, len * .12, .02), mslM); f.position.y = -len * .42; f.rotation.y = a; g.add(f);
+        if (len > 4) { const w = new T.Mesh(new T.BoxGeometry(d * 2.2, len * .14, .02), mslM); w.position.y = len * .05; w.rotation.y = a; g.add(w); } }
+      const noz = new T.Mesh(new T.CylinderGeometry(d * .38, d * .45, len * .03, 12), darkM); noz.position.y = -len * .49; g.add(noz);
       mslTpl[id] = g;
     }
     return mslTpl[id].clone();
@@ -1111,6 +1120,20 @@ const G3 = (() => {
     tpl: id => tmpl[id], // для налагодження
     begin() { frame++; },
     place,
+    // ракета в польоті: та сама 3D-модель, що й у довіднику; ніс — за напрямком руху, вогонь двигуна
+    placeMsl(s, Lpx, now) {
+      const dim = s.tbl === 'sam' ? SAM_MSL[s.mid]?.dim : MSL3[s.mid], key = (s.tbl === 'sam' ? 'sam:' : '') + (s.mid || 'x'), len = dim ? dim[0] : 3.5;
+      let r = live.get(s);
+      if (!r) {
+        const o = mslObj(key, dim), d = dim ? dim[1] : .2, fl = new T.Mesh(new T.ConeGeometry(d * .45, len * .6, 10, 1, true), flameM);
+        fl.position.y = -len * .8; fl.rotation.x = Math.PI; o.add(fl); r = {g: o, sh: new T.Object3D(), fl}; scene.add(o); live.set(s, r);
+      }
+      r.f = frame; const p = P(s.x, s.y), hd = Math.atan2(-(s.vx || 0), s.vy || 1);
+      const k = Lpx / len, th = Math.max(1, 4.5 / ((dim ? dim[1] : .2) * k)); // на мапі ракета — тонка лінія; товщимо для видимості
+      r.g.position.set(p.x, -p.y, 50); r.g.scale.set(k * th, k, k * th);
+      qY.setFromAxisAngle(AZ, hd); r.g.quaternion.copy(qT).multiply(qY);
+      r.fl.scale.set(1, .7 + .5 * Math.abs(Math.sin(now * 50 + s.id)), 1);
+    },
     end() { for (const [o, r] of live) if (r.f !== frame) { scene.remove(r.g, r.sh); live.delete(o); } R.render(scene, cam); },
     snapMsl(cv, id, dim) {
       const s = new T.Scene(), o = mslObj(id, dim), len = (dim || MSL3[id] || SAM_MSL[id].dim)[0], D = len * .6; lights(s);
@@ -1293,9 +1316,10 @@ function drainEvents() {
     else if (type === 'tracer') V.tracers.push({x: a, y: b, tx: c, ty: d, t: 0});
     else if (type === 'shake') { V.shake = Math.min(14, V.shake + a); V.flash = Math.min(.35, V.flash + b); }
     else if (type === 'end') endScreen(a);
+    else if (type === 'alarmEnd') AU.alarm('clear');
     else if (type === 'voice') {
-      if (G.mode === 'attack') {} else if (a === 'high') { speak(b); danger(b === 'bal' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — БАЛІСТИКА' : b === 'pkr' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — НАДЗВУКОВІ РАКЕТИ' : '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — КРИЛАТІ РАКЕТИ'); AU.siren(); }
-      else speak(a);
+      if (G.mode === 'attack') {} else if (a === 'high') { speak(b); danger(b === 'bal' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — БАЛІСТИКА' : b === 'pkr' ? '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — НАДЗВУКОВІ РАКЕТИ' : '⚠ ВИСОКИЙ РІВЕНЬ НЕБЕЗПЕКИ — КРИЛАТІ РАКЕТИ'); AU.alarm('red'); }
+      else if (a !== 'alarm' && a !== 'clear') speak(a); // тривога/відбій по районах — без голосу (звук один раз на хвилю)
     } else if (type === 'balwarn' && !V.ff && G.mode !== 'attack') balWarn(a, b);
     else if (type === 'caution') { speak(d ? 'caution' : 'cautionN'); danger(`⚠ ОБЕРЕЖНО! ${a}: ${b} км до кордону з ${c || 'сусідньою державою'} — ${d ? 'далі ППО противника!' : 'далі нейтральний простір, не залітати!'}`, true); }
   }
@@ -1438,6 +1462,7 @@ function pickAt(cp, onlyEnemy) {
   G.radars.forEach(r => test(r, 'unit'));
   G.air.forEach(a => a.state !== 'base' && a.state !== 'service' && test(a, 'unit'));
   G.uavs.forEach(u => u.state !== 'strike' && test(u, 'unit'));
+  G.shots.forEach(s => test(s, 'shot'));
   if (!best && !myUnit(V.sel)) { bd = coarse ? 20 : 10; G.cities.forEach(c => test(c, 'city')); }
   return best;
 }
@@ -1489,7 +1514,7 @@ map.on('click', e => {
   }
   const hit = pickAt(e.containerPoint, false), en = pickAt(e.containerPoint, true);
   if (myUnit(V.sel) && en) { cmd({t: 'assign', unit: V.sel.id, target: en.o.id}); AU.click(); return; }
-  if (hit) { select(hit.o); AU.click(); return; }
+  if (hit) { select(hit.o); AU.click(); return; } // зокрема ракета в польоті — її ТТХ
   const u = V.sel;
   if (u && ((u.kind === 'air' && u.d.role !== 'strike') || (u.kind === 'uav' && u.d.role !== 'kamikaze') || ((u.kind === 'sam' || u.kind === 'radar') && u.d.mobile))) { cmd({t: 'move', unit: u.id, ...pt}); AU.click(); }
   else select(null);
@@ -1499,7 +1524,7 @@ map.on('click', e => {
 const STATE = {base: 'на базі', service: 'дозаправка й дозарядка', move: 'в польоті', patrol: 'патрулювання', intercept: 'перехоплення', rtb: 'повертається на базу', strikeOut: 'летить на удар'};
 const chips = (u, kinds) => `<div class="btns">${kinds.map(k => `<button class="chip ${u.filt[k] ? 'on' : ''}" data-act="f:${k}">${KIND[k]}</button>`).join('')}</div>`;
 const bar = (k, col = 'var(--acc)') => `<div class="bar"><i style="width:${Math.max(0, Math.min(1, k)) * 100}%;background:${col}"></i></div>`;
-function alive(u) { return u && (u.kind === 'strikepick' || u.kind === 'atkpick' || (u.kind === 'sam' ? G.sams : u.kind === 'radar' ? G.radars : u.kind === 'air' ? G.air : u.kind === 'enemy' ? G.enemies : u.t ? G.cities : G.uavs).includes(u)); }
+function alive(u) { return u && (u.kind === 'strikepick' || u.kind === 'atkpick' || (u.kind === 'shot' && G.shots.includes(u)) || (u.kind === 'sam' ? G.sams : u.kind === 'radar' ? G.radars : u.kind === 'air' ? G.air : u.kind === 'enemy' ? G.enemies : u.t ? G.cities : G.uavs).includes(u)); }
 const KIND_OBJ = {city: 'населений пункт', energy: 'енергетика', air: 'аеропорт', base: 'ваш аеродром', fuel: 'нафтобаза', rail: 'залізничний вузол', misc: 'обʼєкт', depot: 'склад озброєння'};
 const siteBtns = (act, d) => `<div class="sites">${SITES.map(s => `<button data-act="${act}:${s.id}"><b>${s.name}</b> <span class="k">~${s.km} км · ${Math.round(s.km / (d.cruise || 1000) * 60 + (d.cruise ? 0 : 10))} хв · пусків з напрямку ${s.dirs.join('/')}${G.siteMult[s.id] < 1 ? ` · вже −${Math.round((1 - G.siteMult[s.id]) * 100)}%` : ''}</span></button>`).join('')}</div>`;
 const selBtns = () => `<span style="display:flex;gap:4px">${V.sel?.x != null ? `<button data-act="follow" title="Камера стежить за цим обʼєктом" class="${V.follow === V.sel ? 'on' : ''}">🎥</button>` : ''}<button data-act="min" title="Згорнути / розгорнути">${V.selMin ? '▴' : '▾'}</button><button data-act="close" title="Закрити">✕</button></span>`;
@@ -1509,6 +1534,21 @@ function renderSel() {
   el.classList.remove('hidden'); el.classList.toggle('enemy', u.kind === 'enemy');
   const d = u.d;
   let h;
+  if (u.kind === 'shot') { // ракета в польоті: ТТХ і політ у реальному часі
+    const m = u.tbl === 'sam' ? SAM_MSL[u.mid] : AAM[u.mid], e = u.e, dd = dist(u, e), mach = (u.v * 1000 / 340).toFixed(1);
+    h = `<h3>🚀 ${m ? m.name : 'Ракета'}${selBtns()}</h3>`; if (V.selMin) { el.innerHTML = h; return; }
+    const dim = u.tbl === 'sam' ? m?.dim : MSL3[u.mid];
+    h += `<div class="mrow">${m ? mi(m) : ''}<div><b>Пуск: ${u.src?.d?.name || '—'}</b><small>${m?.note || ''}</small></div></div>`;
+    h += `<table><tr><td>Швидкість</td><td>${Math.round(u.v * 1000)} м/с (~${mach} М)</td></tr>
+      <tr><td>Дальність</td><td>${m ? m.range : '—'} км · пролетіла ${Math.round(u.max - u.left)} км · запас ${Math.round(u.left)} км</td></tr>
+      <tr><td>У польоті</td><td>${Math.round(G.time - u.t0)} с</td></tr>
+      ${dim ? `<tr><td>Розміри</td><td>~${dim[0]} × ${dim[1]} м</td></tr>` : ''}
+      <tr><td>Ціль</td><td style="color:var(--bad)">${label(e)} · ${Math.round(e.v * 3600)} км/год · ${e.alt >= 1 ? e.alt.toFixed(1) + ' км' : Math.round(e.alt * 1000) + ' м'}</td></tr>
+      <tr><td>До цілі</td><td><b>${dd.toFixed(1)} км</b> · зустріч ~${Math.max(0, dd / u.v).toFixed(1)} с</td></tr>
+      <tr><td>Шанс ураження</td><td>${Math.round(u.pk * 100)}%</td></tr></table>`;
+    h += `${bar(1 - u.left / u.max, 'var(--warn)')}<div class="k">Натисніть 🎥, щоб камера летіла за ракетою.</div>`;
+    el.innerHTML = h; return;
+  }
   if (u.kind === 'atkpick') { // план пусків
     const A = V.atk, ad = ENEMY[A.type], bal = ad.kind === 'bal', tg = G.cities.find(c => c.id === A.target), c1 = ATK_COST[A.type];
     h = `<h3>Пуск: ${ad.name}${selBtns()}</h3>`; if (V.selMin) { el.innerHTML = h; return; }
@@ -1577,7 +1617,7 @@ function renderSel() {
       h += `<div class="mrow ${u.buyType === mid ? 'pick' : ''}" data-act="pick:${mid}">${mi(m)}<div><b>${m.name}</b><small>${m.range} км · ${m.gun ? 'черга' : m.v + ' м/с'}${d.bm ? ` · балістика: <span style="color:${m.bm ? 'var(--ok)' : 'var(--bad)'}">${balText(m)}</span>` : ''} · ${pkText(m)} · ${price(m)} ⛁${m.pack ? `/${m.pack} черг` : ''} · на ПУ ${u.load[mid] || 0}, резерв ${u.stock[mid] || 0}${off ? ' · <span style="color:var(--bad)">склад знищено</span>' : ''}</small></div>
         <button data-act="b1:${mid}">+1</button><button data-act="bf:${mid}">+повна</button></div>`;
     }
-    h += `<div class="btns"><button class="chip ${u.auto ? 'on' : ''}" data-act="auto">Автозакупівля</button></div>`;
+    h += `<div class="btns"><button class="chip ${u.auto ? 'on' : ''}" data-act="auto">Автозакупівля</button><button class="chip ${V.watchSrc === u ? 'on' : ''}" data-act="watch" title="Камера полетить за наступною ракетою цього комплексу й покаже її ТТХ">🎥 За наступною ракетою</button></div>`;
     h += `<div class="k">Що збивати автоматично (впізнані імітатори пропускає):</div>${chips(u, d.bm ? ['drone', 'cruise', 'bal'] : ['drone', 'cruise'])}`;
     h += `<div><span class="k">Пріоритет:</span> ${u.force && !u.force.dead ? `${label(u.force)} <button data-act="unforce">Скинути</button>` : 'авто (клік по цілі — призначити)'}</div>`;
     if (d.mobile) h += `<div class="k">Клік по карті — переїхати (${d.speed} км/год, 1 ⛁ пального).</div>`;
@@ -1630,6 +1670,7 @@ $('sel').addEventListener('pointerdown', e => {
   if (act === 'an') { V.atk.n = Math.max(1, Math.min(50, V.atk.n + +arg)); return renderSel(); }
   if (act === 'aplan') { cmd({t: 'plan', type: V.atk.type, dir: V.atk.dir, target: V.atk.target, n: V.atk.n}); return renderSel(); }
   if (act === 'aun') { const [i, all] = arg.split(':'); cmd({t: 'unplan', i: +i, n: +all ? 1 : 0}); return renderSel(); }
+  if (act === 'watch') { V.watchSrc = V.watchSrc === u ? null : u; logMsg(V.watchSrc ? `Чекаю на пуск ${u.d.name} — камера полетить за ракетою.` : 'Скасовано.'); return renderSel(); }
   if (act === 'follow') { V.follow = V.follow === u ? null : u; logMsg(V.follow ? 'Камера стежить за обраним. Потягніть карту, щоб зупинити.' : 'Стеження вимкнено.'); return renderSel(); }
   if (act === 'close') return select(null);
   if (act === 'min') { V.selMin = !V.selMin; return renderSel(); }
@@ -1664,29 +1705,17 @@ function unit(o, d, edge, px, text, color, airborne) {
   if (text && SET.labels) { g.font = '11px system-ui'; g.textAlign = 'left'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.65)'; g.strokeText(text, p.x + px / 2 + 3, p.y - 3); g.fillStyle = color || edge; g.fillText(text, p.x + px / 2 + 3, p.y - 3); g.lineWidth = 1; }
 }
 // ракета в польоті: димний слід, корпус із носовим обтічником і стабілізаторами, факел двигуна
-// стрілка від обраного літака/ППО до курсора: чи добиває ракета, чи вистачить пального
+// дальність обраного літака: коло «ракети добивають до N км»
 function rangeArrow() {
-  const u = V.sel, c = V.cursor; if (!u || !c || V.pending || V.drag || !myUnit(u) || u.x == null || coarse) return;
-  if (u.kind === 'air' && (['service'].includes(u.state) || u.d.role === 'strike')) return;
-  if (u.kind !== 'air' && u.kind !== 'sam') return;
-  const d = dist(u, c); let R = 0, note = '', ok;
-  if (u.kind === 'air') {
-    const ms = Object.entries(u.load).filter(([, n]) => n > 0).map(([k]) => AAM[k]), m = ms.sort((a, b) => b.range - a.range)[0];
-    R = m ? m.range : u.gun ? 1 : 0; ok = d <= R;
-    const fuelKm = u.fuel * u.d.cruise / 3600, need = d + dist(c, BASE), fuelOk = need <= fuelKm;
-    note = (R ? (ok ? `ракета добиває (${m ? m.name : 'гармата'}, ${R} км)` : `поза дальністю ${m ? 'ракет' : 'гармати'} (макс. ${R} км)`) : 'немає озброєння')
-      + ` · пальне: ${fuelOk ? 'долетить і повернеться' : `не вистачить (${Math.round(need)} з ${Math.round(fuelKm)} км)`}`;
-    if (R) circle(u.x, u.y, R, ok ? 'rgba(94,224,138,.7)' : 'rgba(255,179,71,.6)', null, [3, 4]);
-  } else { R = samMaxRange(u) || samRange(u.d); ok = d <= R; note = ok ? `у зоні ураження (${R} км)` : `поза зоною (макс. ${R} км)`; }
-  const a = P(u.x, u.y), b = P(c.x, c.y), col = ok ? '#5ee08a' : '#ffb347', an = Math.atan2(b.y - a.y, b.x - a.x);
-  g.strokeStyle = col; g.lineWidth = 2; g.setLineDash([7, 5]); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); g.setLineDash([]);
-  g.fillStyle = col; g.beginPath(); g.moveTo(b.x, b.y); g.lineTo(b.x - 12 * Math.cos(an - .4), b.y - 12 * Math.sin(an - .4)); g.lineTo(b.x - 12 * Math.cos(an + .4), b.y - 12 * Math.sin(an + .4)); g.fill();
-  g.font = 'bold 12px system-ui'; g.textAlign = 'left'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.8)';
-  const txt = `${Math.round(d)} км`; g.strokeText(txt, b.x + 10, b.y - 8); g.fillText(txt, b.x + 10, b.y - 8);
-  g.font = '11px system-ui'; g.strokeText(note, b.x + 10, b.y + 7); g.fillStyle = '#fff'; g.fillText(note, b.x + 10, b.y + 7); g.lineWidth = 1;
+  const u = V.sel; if (!u || u.kind !== 'air' || u.x == null || ['base', 'service'].includes(u.state) || u.d.role === 'strike' || u.d.role === 'awacs') return;
+  const m = Object.entries(u.load).filter(([, n]) => n > 0).map(([k]) => AAM[k]).sort((a, b) => b.range - a.range)[0], R = m ? m.range : u.gun ? 1 : 0;
+  if (!R) return;
+  circle(u.x, u.y, R, 'rgba(94,224,138,.85)', 'rgba(94,224,138,.06)', [6, 4]);
+  const p = P(u.x, u.y), y = p.y - R * kmPx() - 6, txt = `добиває до ${R} км (${m ? m.name : 'гармата'})`;
+  g.font = 'bold 12px system-ui'; g.textAlign = 'center'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.8)'; g.strokeText(txt, p.x, y); g.fillStyle = '#8ef0b0'; g.fillText(txt, p.x, y); g.lineWidth = 1;
 }
 function drawShot(s, t) {
-  const p = P(s.x, s.y), n = s.trail.length / 2;
+  const p = P(s.x, s.y), n = s.trail.length / 2, d3 = G3 && V3.some(k => SET[k]);
   for (let i = 0; i < n; i++) { // дим: товщає й розсіюється до хвоста
     const q = P(s.trail[i * 2], s.trail[i * 2 + 1]), k = i / Math.max(1, n);
     g.globalAlpha = .08 + .32 * k; g.fillStyle = '#d8dde2'; g.beginPath(); g.arc(q.x, q.y, 1.2 + (1 - k) * 3.5, 0, 7); g.fill();
@@ -1695,6 +1724,7 @@ function drawShot(s, t) {
   const dim = s.tbl === 'sam' ? SAM_MSL[s.mid]?.dim : MSL3[s.mid], len = dim ? dim[0] : 3.5, dia = dim ? dim[1] : .2;
   const L = Math.max(11, Math.min(24, 7 + len * 2.4)), W = Math.max(2.4, Math.min(5, dia * 14));
   const ang = Math.atan2(-(s.vy || 0), s.vx || 1);
+  if (d3) { G3.placeMsl(s, L * 1.8, t); if (s === V.sel) { g.strokeStyle = '#ffb347'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, L, 0, 7); g.stroke(); g.lineWidth = 1; } return; }
   g.save(); g.translate(p.x, p.y); g.rotate(ang);
   const fl = L * (.45 + .25 * Math.sin(t * 60 + s.x)); // факел
   const fg = g.createLinearGradient(-L / 2 - fl, 0, -L / 2, 0); fg.addColorStop(0, 'rgba(255,120,30,0)'); fg.addColorStop(.6, 'rgba(255,190,60,.9)'); fg.addColorStop(1, '#fff6c8');
@@ -1902,7 +1932,12 @@ function frame(now) {
     V.booms = V.booms.filter(b => b.t < b.life); V.parts = V.parts.filter(p => p.t < p.life); V.tracers = V.tracers.filter(t => t.t < .3);
     V.shake *= Math.pow(.02, rdt); V.flash *= Math.pow(.05, rdt);
   }
-  if (V?.follow) { if (alive(V.follow) && V.follow.x != null) map.panTo(toLL(V.follow.x, V.follow.y), {animate: false}); else V.follow = null; }
+  if (G && V?.watchSrc) { const s = G.shots.filter(q => q.src === V.watchSrc).at(-1); if (s && s !== V.lastWatched) { V.lastWatched = s; V.watchSrc = null; select(s); V.follow = s; if (map.getZoom() < 10) map.setZoom(10.5); setSpeed(Math.min(V.speed || 1, 10)); } }
+  if (V?.follow) {
+    if (alive(V.follow) && V.follow.x != null) map.panTo(toLL(V.follow.x, V.follow.y), {animate: false});
+    else if (V.follow.kind === 'shot' && V.follow.e && !V.follow.e.dead && G.enemies.includes(V.follow.e)) { V.follow = V.follow.e; } // промах — камера на ціль
+    else V.follow = null;
+  }
   draw(rdt); requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
