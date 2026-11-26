@@ -748,31 +748,40 @@ const G3 = (() => {
   };
   for (const [k, v] of Object.entries(CAMO)) v.id = k;
   const SKIP_MAT = /nocamo|glass|canopy|cockpit|lamp|light|tyre|tire|wheel|rubber|track|window|visor|lens|exhaust|nozzle/i;
-  function applyCamo(root, scheme, detail = .6) {
-    const sc = CAMO[scheme]; if (!sc) return;
+  // scheme == null — лишити рідну фарбу моделі (лише намалювати кокарди mark)
+  function applyCamo(root, scheme, detail = .6, mark = null) {
+    const keep = !CAMO[scheme], sc = CAMO[scheme] || CAMO.natoGreen; if (keep && !mark) return;
     const tex = camoTexture(sc), inv = new T.Matrix4(); root.updateMatrixWorld(true); inv.copy(root.matrixWorld).invert();
     root.traverse(o => {
       if (!o.isMesh || o.userData.noCamo) return;
       const mats = [].concat(o.material), M4 = new T.Matrix4().multiplyMatrices(inv, o.matrixWorld);
       const out = mats.map(mt => {
         if (!mt || mt.transparent || mt.opacity < 1 || SKIP_MAT.test(mt.name || '') || !mt.isMeshStandardMaterial) return mt;
-        const m2 = mt.clone(); m2.color.set(0xffffff); m2.vertexColors = false; // кольори вершин автора теж перефарбовуємо
+        const m2 = mt.clone(); if (!keep) { m2.color.set(0xffffff); m2.vertexColors = false; } // кольори вершин автора теж перефарбовуємо
         m2.onBeforeCompile = sh => {
           const bc = new T.Color(sc.belly || '#000');
-          Object.assign(sh.uniforms, {camoMap: {value: tex}, camoM: {value: M4}, camoS: {value: 1 / sc.size}, camoD: {value: detail}, camoB: {value: new T.Vector4(bc.r, bc.g, bc.b, sc.belly ? 1 : 0)}});
+          Object.assign(sh.uniforms, {camoMap: {value: tex}, camoM: {value: M4}, camoS: {value: 1 / sc.size}, camoD: {value: detail}, camoB: {value: new T.Vector4(bc.r, bc.g, bc.b, sc.belly ? 1 : 0)},
+            camoK: {value: keep ? 1 : 0}, camoR: {value: mark ? new T.Vector4(mark.x, mark.y, mark.r, 1) : new T.Vector4()}, camoZ: {value: mark ? mark.z : 0}});
           sh.vertexShader = 'uniform mat4 camoM;\nvarying vec3 vCamoP;\nvarying vec3 vCamoN;\n' + sh.vertexShader
             .replace('#include <begin_vertex>', '#include <begin_vertex>\nvCamoP = (camoM * vec4(transformed, 1.0)).xyz;\nvCamoN = normalize(mat3(camoM) * objectNormal);');
-          sh.fragmentShader = 'uniform sampler2D camoMap;\nuniform float camoS;\nuniform float camoD;\nuniform vec4 camoB;\nvarying vec3 vCamoP;\nvarying vec3 vCamoN;\n' + sh.fragmentShader
+          sh.fragmentShader = 'uniform sampler2D camoMap;\nuniform float camoS;\nuniform float camoD;\nuniform vec4 camoB;\nuniform float camoK;\nuniform vec4 camoR;\nuniform float camoZ;\nvarying vec3 vCamoP;\nvarying vec3 vCamoN;\n' + sh.fragmentShader
             .replace('#include <map_fragment>', `
-              float lum = 0.5;
+              float lum = 0.5; vec3 base = vec3(1.0);
               #ifdef USE_MAP
-                vec4 tx = texture2D(map, vUv); lum = dot(tx.rgb, vec3(.299, .587, .114));
+                vec4 tx = texture2D(map, vUv); lum = dot(tx.rgb, vec3(.299, .587, .114)); base = mapTexelToLinear(tx).rgb;
               #endif
               vec3 wn = abs(normalize(vCamoN)); wn = pow(wn, vec3(4.0)); wn /= (wn.x + wn.y + wn.z + 1e-4);
               vec3 cz = texture2D(camoMap, vCamoP.xy * camoS).rgb, cy = texture2D(camoMap, vCamoP.xz * camoS + .37).rgb, cx = texture2D(camoMap, vCamoP.yz * camoS + .71).rgb;
               vec3 camo = cz * wn.z + cy * wn.y + cx * wn.x;
               if (camoB.w > 0.5) camo = mix(camo, camoB.rgb, 1.0 - smoothstep(-0.55, -0.2, normalize(vCamoN).z)); // черево іншим кольором
-              diffuseColor.rgb *= camo * mix(1.0, clamp(lum * 1.9, .3, 1.15), camoD);`);
+              vec3 col = camoK > 0.5 ? base : camo * mix(1.0, clamp(lum * 1.9, .3, 1.15), camoD);
+              // кокарда ПС ЗСУ: синє коло з жовтим центром, нанесене на верхню поверхню крила (по її формі)
+              if (camoR.w > 0.5) {
+                vec2 q = vec2(abs(vCamoP.x) - camoR.x, vCamoP.y - camoR.y); float dd = length(q);
+                if (normalize(vCamoN).z > 0.2 && abs(vCamoP.z - camoZ) < camoR.z * 0.6 && dd < camoR.z)
+                  col = (dd < camoR.z * 0.5 ? vec3(1.0, 0.75, 0.0) : vec3(0.0, 0.1, 0.48)) * mix(1.0, clamp(lum * 1.9, .6, 1.1), .3);
+              }
+              diffuseColor.rgb *= col;`);
         };
         m2.customProgramCacheKey = () => 'camo';
         m2.metalness = Math.min(m2.metalness, .15); m2.roughness = Math.max(m2.roughness, .6);
@@ -782,34 +791,42 @@ const G3 = (() => {
     });
   }
   // розпізнавальні знаки ПС ЗСУ: синьо-жовті кокарди зверху на обох площинах крила (місце знаходиться променями)
-  function uaRoundels(root, m) {
+  function uaRoundels(root, m, kx = .6) {
     // точки поверхні моделі в її власних координатах (метри); стиснуті (квантовані) координати розпаковуємо вручну
     root.updateMatrixWorld(true);
     const inv = new T.Matrix4().copy(root.matrixWorld).invert(), pts = [], v = V();
     const DEN = {Int8Array: 127, Uint8Array: 255, Int16Array: 32767, Uint16Array: 65535};
+    // точки по всій площі трикутників (не лише вершини: велике пласке крило може бути з 2–3 трикутників)
     root.traverse(o => {
-      if (!o.isMesh || o.userData.mark) return;
+      if (!o.isMesh) return;
       const a = o.geometry.attributes.position, k = a.normalized ? DEN[(a.array || a.data.array).constructor.name] || 1 : 1, M4 = new T.Matrix4().multiplyMatrices(inv, o.matrixWorld);
-      const step = Math.max(1, a.count / 20000 | 0);
-      for (let i = 0; i < a.count; i += step) { v.set(a.getX(i) / k, a.getY(i) / k, a.getZ(i) / k).applyMatrix4(M4); pts.push(v.x, v.y, v.z); }
+      const P = new Float32Array(a.count * 3);
+      for (let i = 0; i < a.count; i++) { v.set(a.getX(i) / k, a.getY(i) / k, a.getZ(i) / k).applyMatrix4(M4); P[i * 3] = v.x; P[i * 3 + 1] = v.y; P[i * 3 + 2] = v.z; }
+      const idx = o.geometry.index, nt = (idx ? idx.count : a.count) / 3, at = t => idx ? idx.getX(t) : t;
+      for (let t = 0; t < nt; t++) {
+        const i0 = at(t * 3) * 3, i1 = at(t * 3 + 1) * 3, i2 = at(t * 3 + 2) * 3;
+        const ux = P[i1] - P[i0], uy = P[i1 + 1] - P[i0 + 1], uz = P[i1 + 2] - P[i0 + 2], wx = P[i2] - P[i0], wy = P[i2 + 1] - P[i0 + 1], wz = P[i2 + 2] - P[i0 + 2];
+        const area = .5 * Math.hypot(uy * wz - uz * wy, uz * wx - ux * wz, ux * wy - uy * wx), ns = Math.min(80, 1 + Math.ceil(area * 30));
+        for (let q = 0; q < ns; q++) { let r1 = Math.random(), r2 = Math.random(); if (r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
+          pts.push(P[i0] + ux * r1 + wx * r2, P[i0 + 1] + uy * r1 + wy * r2, P[i0 + 2] + uz * r1 + wz * r2); }
+      }
     });
-    const xs = m.S / 2 * .6, band = m.S * .05, n = 48, bins = Array(n).fill(-1e9);
+    const xs = m.S / 2 * kx, band = m.S * .04, n = 48, bins = Array(n).fill(-1e9);
     for (let i = 0; i < pts.length; i += 3) {
       const x = pts[i], y = pts[i + 1], z = pts[i + 2]; if (Math.abs(Math.abs(x) - xs) > band) continue;
       const b = Math.floor((y + m.L / 2) / m.L * n); if (b >= 0 && b < n) bins[b] = Math.max(bins[b], z);
     }
-    // найдовша безперервна ділянка — хорда крила на цьому розмаху
+    // висота крила — медіана верхніх точок; підвіски/ракети/пілони, що стирчать вище чи нижче, відкидаємо
+    const zs = bins.filter(z => z > -1e8).sort((a, b) => a - b); if (!zs.length) return false;
+    const zMed = zs[zs.length / 2 | 0], tol = Math.max(.15, m.S * .02);
+    // найдовша безперервна ділянка на цій висоті — хорда крила на цьому розмаху
     let best = [], run = [];
-    for (let b = 0; b < n; b++) { if (bins[b] > -1e8) run.push(b); else { if (run.length > best.length) best = run; run = []; } }
+    for (let b = 0; b < n; b++) { if (bins[b] > -1e8 && Math.abs(bins[b] - zMed) < tol) run.push(b); else { if (run.length > best.length) best = run; run = []; } }
     if (run.length > best.length) best = run;
     if (best.length < 2) return false;
-    const yc = -m.L / 2 + (best[0] + best[best.length - 1] + 1) / 2 / n * m.L, zc = Math.max(...best.map(b => bins[b])), chord = best.length / n * m.L;
+    const yc = -m.L / 2 + (best[0] + best[best.length - 1] + 1) / 2 / n * m.L, zc = best.map(b => bins[b]).sort((a, b) => a - b)[best.length / 2 | 0], chord = best.length / n * m.L;
     const rad = Math.min(chord * .3, m.S * .065, 1.1);
-    const lift = Math.max(.05, m.S * .012);
-    for (const sx of [1, -1]) for (const [mt, kk, dz] of [[uaBlueD, 1, lift], [uaYellowD, .5, lift * 1.3]]) {
-      const me = new T.Mesh(new T.CircleGeometry(rad * kk, 28), mt); me.position.set(sx * xs, yc, zc + dz); me.userData.mark = me.userData.noCamo = true; root.add(me);
-    }
-    return true;
+    return {x: xs, y: yc, z: zc, r: rad}; // кокарду малює шейдер прямо на поверхні крила (лягає по її формі)
   }
   const KIT = (() => {
     const M = (c, r = .7, mt = .15) => new T.MeshStandardMaterial({color: c, roughness: r, metalness: mt});
@@ -978,8 +995,8 @@ const G3 = (() => {
           add(new T.BoxGeometry(.4, 8.6, .78), -1.5, z + .95);
           for (const yy of [-4.2, -.2]) add(new T.BoxGeometry(.28, .5, .8), yy, z + .3);
         }
-        if (cfg.camo) applyCamo(w, cfg.camo, cfg.detail ?? .6);
-        if (cfg.marks === 'air') uaRoundels(root, m);
+        const mark = cfg.marks === 'air' ? uaRoundels(root, m, cfg.markX || .6) || null : null;
+        cfg.mark = mark; if (cfg.camo || mark) applyCamo(root, cfg.camo, cfg.detail ?? .6, mark);
         tmpl[id] = root; m.glb = cfg; // cfg: name/author/license/url — для підпису автора (CC BY вимагає)
         if (menuScreen === 'codex') codex(cxTab);
         if (G) renderCards();

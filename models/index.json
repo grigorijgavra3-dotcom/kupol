@@ -1,9 +1,9 @@
 {
   "su27":     {"name": "Su27", "author": "manilov.ap", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-1e4d5f1551a94e75b407bb5119fca8c2", "rot": 90, "camo": "uaPixelBlue", "marks": "air"},
-  "f16":      {"name": "General Dynamics F-16D Block 60", "author": "MirzaArrafiERV_45", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-ea8edb08d79e4eafa9c794c581f88cf3", "rot": 180, "marks": "air"},
+  "f16":      {"name": "General Dynamics F-16D Block 60", "author": "MirzaArrafiERV_45", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-ea8edb08d79e4eafa9c794c581f88cf3", "rot": 180, "marks": "air", "markX": 0.45},
   "m2000":    {"name": "Mirage2000", "author": "manilov.ap", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-3efefc5b6230418eb5d39a4afcb95657", "rot": 50.5, "marks": "air", "camo": "frGrey"},
   "gripen":   {"name": "JAS39 Gripen", "author": "helijah", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-a2b70c2f92af45d18d95f02b60621dbf", "rot": 90, "marks": "air"},
-  "su24":     {"name": "Su24", "author": "manilov.ap", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-3439ae4000df438894a44127ebda538c", "rot": 130, "camo": "uaGrey24", "marks": "air"},
+  "su24":     {"name": "Su24", "author": "manilov.ap", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-3439ae4000df438894a44127ebda538c", "rot": 130, "camo": "uaGrey24", "marks": "air", "markX": 0.72},
   "su25":     {"name": "Su-25", "author": "tnikita", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-88b71eb848cf4418a95dff497c07cefc", "camo": "uaSu25", "marks": "air"},
   "l39":      {"name": "L39", "author": "manilov.ap", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-4b37b2b4ae9e40ac9a6fb876e2142672", "rot": 180, "camo": "uaL39", "marks": "air"},
   "mi24":     {"name": "Mi-24 Hind", "author": "duanesmind", "license": "CC BY", "url": "https://sketchfab.com/3d-models/none-004d68143e1a4df88e136dbc0a05f181", "camo": "uaMi24"},
