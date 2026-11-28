@@ -69,7 +69,7 @@ const f = S.command({t: 'buyAir', def: 'mig29'});
 S.command({t: 'move', unit: f.id, x: S.BASE.x + 20, y: S.BASE.y}); run(g, 200);
 S.command({t: 'act', unit: f.id, act: 'rtb'});
 const r1 = g.res; run(g, 400);
-assert(f.state === 'service' && g.res === r1 - 1, 'обслуговування коштує 1 ⛁');
+assert(f.state === 'service' && g.res === r1, 'обслуговування безкоштовне');
 assert(!f.groundUntil && !S.grounded(f), 'Ветеран: хвилю більше не пропускає (лише довше обслуговування)');
 
 console.log('OK — нові механіки працюють');
